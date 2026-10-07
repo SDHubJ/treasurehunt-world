@@ -1,1 +1,449 @@
-   <!doctype html><title>Treasure Hunt World</title><h1>Treasure Hunt World</h1><p>Coming soon.</p>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Treasure Hunt World · Build your own treasure hunt</title>
+<meta name="description" content="Draw a map, hide the clues, set the challenges. Build your own phone-based treasure hunt with live leaderboard, hunt clock, gallery and judging. One hunt, $20.">
+<meta name="theme-color" content="#0C1510">
+<meta property="og:title" content="Treasure Hunt World">
+<meta property="og:description" content="Something is hidden near you. Build your own treasure hunt.">
+<meta property="og:url" content="https://treasurehunt.world/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230C1510'/%3E%3Cpath d='M9 9 L23 23 M23 9 L9 23' stroke='%23FF8FC7' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400;1,9..144,700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --night: #0C1510;
+  --card: #13241A;
+  --line: #2F5A3B;
+  --leaf: #7FC48E;
+  --leaf-dim: #9FC9A8;
+  --banana: #F5D63D;
+  --pink: #FF8FC7;
+  --cream: #EDE6D6;
+  --cream-dim: #C9C2B0;
+  --rec: #FF4D4D;
+  --display: 'Bagel Fat One', 'Arial Rounded MT Bold', sans-serif;
+  --serif: 'Fraunces', Georgia, serif;
+  --mono: 'IBM Plex Mono', 'Courier New', monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--night);
+  color: var(--cream);
+  font-family: var(--serif);
+  font-size: 18px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: var(--pink); }
+img { max-width: 100%; display: block; }
+.wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding: 0 20px; position: relative; }
+.mono { font-family: var(--mono); font-size: 12px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; }
+.rec-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--rec); animation: blink 1.6s steps(2, start) infinite; }
+@keyframes blink { to { visibility: hidden; } }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; margin: 0; line-height: 1; }
+h2 { font-size: clamp(38px, 9vw, 64px); color: var(--banana); }
+p { margin: 0; }
+.kicker { color: var(--leaf-dim); display: block; margin-bottom: 14px; }
+section { padding: 72px 0; position: relative; overflow: hidden; }
+html { overflow-x: clip; }
+
+/* Viewfinder corners */
+.corners { position: fixed; inset: 12px; pointer-events: none; z-index: 40; }
+.corners span { position: absolute; width: 26px; height: 26px; border: 0 solid var(--cream); opacity: 0.55; }
+.corners .tl { top: 0; left: 0; border-top-width: 2.5px; border-left-width: 2.5px; }
+.corners .tr { top: 0; right: 0; border-top-width: 2.5px; border-right-width: 2.5px; }
+.corners .bl { bottom: 0; left: 0; border-bottom-width: 2.5px; border-left-width: 2.5px; }
+.corners .br { bottom: 0; right: 0; border-bottom-width: 2.5px; border-right-width: 2.5px; }
+
+/* Top bar */
+.top { position: sticky; top: 0; z-index: 30; background: rgba(12, 21, 16, 0.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding-top: 6px; padding-bottom: 6px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--cream); text-decoration: none; }
+.brand b { font-family: var(--display); font-weight: 400; font-size: 20px; letter-spacing: 0.01em; }
+.brand b i { font-style: normal; color: var(--pink); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: var(--display); font-size: 19px; color: var(--night); text-decoration: none;
+  background: var(--pink); border: 0; border-radius: 999px; padding: 14px 24px; min-height: 52px; cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(255, 143, 199, 0.0); transition: transform .15s ease, box-shadow .2s ease;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 0 22px 2px rgba(255, 143, 199, 0.45); }
+.btn.small { font-size: 16px; padding: 9px 16px; min-height: 42px; }
+.btn.ghost { background: transparent; color: var(--cream); border: 1.5px solid var(--line); font-family: var(--serif); font-weight: 700; font-size: 17px; }
+.btn.ghost:hover { border-color: var(--leaf); box-shadow: none; }
+:focus-visible { outline: 3px solid var(--banana); outline-offset: 3px; }
+
+/* Hero */
+.hero { padding: 84px 0 96px; overflow: hidden; }
+.stars { position: absolute; inset: 0; pointer-events: none; }
+.hero h1 { font-size: clamp(64px, 19vw, 168px); line-height: 0.92; letter-spacing: -0.01em; color: var(--banana); position: relative; }
+.hero h1 .pink { color: var(--pink); display: flex; align-items: center; gap: 16px; }
+.hero h1 .trail { flex: 1 1 auto; min-width: 70px; height: clamp(50px, 10vw, 110px); }
+.hero .lede { font-size: clamp(20px, 4.8vw, 26px); font-style: italic; color: var(--cream-dim); max-width: 34ch; margin: 26px 0 30px; }
+.hero .ctas { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero .meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 30px; color: var(--leaf-dim); }
+.hero .moon { position: absolute; right: 22px; top: 14px; width: clamp(54px, 12vw, 92px); }
+.hero .banana { position: absolute; right: 3%; bottom: 10px; width: clamp(80px, 18vw, 140px); transform: rotate(-16deg); }
+
+/* Ticker */
+.ticker { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--card); overflow: hidden; white-space: nowrap; }
+.ticker .track { display: inline-block; padding: 12px 0; animation: tick 40s linear infinite; color: var(--leaf-dim); }
+.ticker .track span { margin: 0 22px; }
+.ticker .track span b { color: var(--banana); font-weight: 500; }
+@keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* Cards */
+.card { background: var(--card); border: 1.5px solid var(--line); border-radius: 22px; padding: 22px 22px 24px; position: relative; }
+.grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .grid.two { grid-template-columns: 1fr 1fr; } .grid.three { grid-template-columns: repeat(3, 1fr); } .grid.four { grid-template-columns: repeat(4, 1fr); } }
+
+/* Steps */
+.intro { font-size: clamp(19px, 4.4vw, 23px); font-style: italic; color: var(--cream-dim); max-width: 42ch; margin: 18px 0 34px; }
+.step .tape { display: flex; justify-content: space-between; align-items: center; color: var(--leaf-dim); margin-bottom: 14px; }
+.step .tape .play { display: inline-flex; align-items: center; gap: 7px; }
+.step h3 { font-size: 26px; color: var(--banana); text-transform: uppercase; margin-bottom: 10px; line-height: 1.05; }
+.step p { color: var(--cream-dim); font-size: 17px; }
+.step .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.chip { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid var(--line); color: var(--leaf); border-radius: 999px; padding: 4px 10px; }
+.step.live { border-color: var(--pink); }
+.step.live h3 { color: var(--pink); }
+
+/* Duration table */
+.durations { margin-top: 18px; display: grid; gap: 10px; }
+.dur { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; background: var(--card); border: 1.5px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+.dur .n { font-family: var(--display); font-size: 30px; color: var(--pink); min-width: 64px; }
+.dur .t { font-family: var(--mono); font-size: 14px; color: var(--cream); }
+.dur .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--night); background: var(--banana); border-radius: 999px; padding: 3px 9px; }
+
+/* Features */
+.feature { display: flex; gap: 14px; align-items: flex-start; }
+.feature svg { flex: 0 0 auto; }
+.feature h3 { font-size: 22px; color: var(--cream); margin-bottom: 6px; }
+.feature p { color: var(--cream-dim); font-size: 16px; }
+
+/* Price */
+.price { text-align: center; padding: 38px 22px 34px; border-color: var(--pink); overflow: hidden; }
+.price .amount { font-family: var(--display); font-size: clamp(96px, 30vw, 170px); line-height: 0.9; color: var(--banana); }
+.price .amount sup { font-size: 0.38em; vertical-align: 0.95em; color: var(--pink); margin-right: 4px; }
+.price .per { font-style: italic; font-size: 21px; color: var(--cream-dim); margin: 8px 0 24px; }
+.price ul { list-style: none; margin: 0 auto 28px; padding: 0; max-width: 460px; text-align: left; display: grid; gap: 10px; }
+.price li { display: flex; gap: 10px; align-items: flex-start; font-size: 17px; }
+.price li::before { content: "✕"; color: var(--pink); font-family: var(--mono); font-weight: 500; line-height: 1.6; }
+.price .fine { color: var(--leaf-dim); margin-top: 16px; }
+
+/* Evidence */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 24px 0 18px; }
+.stat { background: var(--card); border: 1.5px solid var(--line); border-radius: 16px; padding: 16px 12px; text-align: center; }
+.stat b { display: block; font-family: var(--display); font-weight: 400; font-size: clamp(34px, 9vw, 52px); color: var(--pink); line-height: 1; }
+.stat span { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--leaf-dim); }
+.reel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+@media (min-width: 720px) { .reel { grid-template-columns: repeat(4, 1fr); } }
+.frame {
+  aspect-ratio: 4 / 5; border-radius: 16px; border: 1.5px solid var(--line); overflow: hidden; position: relative;
+  background: repeating-linear-gradient(45deg, #13241A 0 12px, #10201A 12px 24px);
+  display: flex; align-items: flex-end; padding: 12px;
+}
+.frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.frame .lbl { position: relative; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--cream); background: rgba(12, 21, 16, 0.75); padding: 3px 8px; border-radius: 6px; }
+.quote { font-size: 21px; font-style: italic; line-height: 1.45; }
+.quote cite { display: block; margin-top: 12px; font-style: normal; color: var(--leaf-dim); }
+
+/* FAQ */
+details { background: var(--card); border: 1.5px solid var(--line); border-radius: 16px; padding: 0 18px; }
+details + details { margin-top: 10px; }
+summary { cursor: pointer; list-style: none; font-weight: 700; font-size: 18px; padding: 16px 30px 16px 0; position: relative; min-height: 44px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; position: absolute; right: 0; top: 12px; font-family: var(--display); font-size: 26px; color: var(--pink); transition: transform .2s; }
+details[open] summary::after { transform: rotate(45deg); }
+details p { color: var(--cream-dim); padding-bottom: 18px; font-size: 17px; }
+
+/* Waitlist */
+.signup { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+@media (min-width: 560px) { .signup { flex-direction: row; } }
+.signup input { flex: 1 1 auto; font: inherit; font-size: 17px; color: var(--cream); background: var(--night); border: 1.5px solid var(--line); border-radius: 999px; padding: 14px 20px; min-height: 52px; }
+.signup input::placeholder { color: #8A9A8E; }
+
+/* Footer */
+footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
+.croc-strip { width: 100%; height: auto; display: block; margin-bottom: 18px; }
+.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 20px; color: var(--leaf-dim); }
+
+/* Nettles */
+.nettle { position: absolute; pointer-events: none; z-index: 0; }
+.rel { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rec-dot, .ticker .track { animation: none; }
+  .btn:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="corners" aria-hidden="true"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
+
+<!-- Nettle symbol, reused -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="nettle" viewBox="0 0 100 130">
+    <path d="M50 4 L56 13 L63 10 L64 21 L73 20 L71 31 L81 33 L76 43 L85 48 L77 56 L83 66 L72 69 L72 80 L62 79 L58 90 L50 85 L42 90 L38 79 L28 80 L28 69 L17 66 L23 56 L15 48 L24 43 L19 33 L29 31 L27 20 L36 21 L37 10 L44 13 Z" fill="#2E6B3F" stroke="#7FC48E" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M50 12 L50 125 M50 30 L64 22 M50 30 L36 22 M50 48 L68 38 M50 48 L32 38 M50 64 L66 56 M50 64 L34 56" stroke="#7FC48E" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  </symbol>
+  <symbol id="banana" viewBox="0 0 150 108">
+    <path d="M14 18 C 26 78, 104 96, 136 48 C 128 52, 118 58, 104 60 C 72 64, 40 50, 26 16 Z" fill="#F5D63D" stroke="#0C1510" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M30 26 C 46 56, 80 66, 116 56" stroke="#C9A722" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M14 18 L20 8 L28 14 L26 16" fill="#5B4A1A" stroke="#0C1510" stroke-width="3" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="play" viewBox="0 0 12 12"><path d="M2 1 L11 6 L2 11 Z" fill="currentColor"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Treasure Hunt World, home">
+      <span class="rec-dot" aria-hidden="true"></span>
+      <b>treasurehunt<i>.world</i></b>
+    </a>
+    <a class="btn small" href="#build">Build yours</a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- HERO -->
+<section class="hero">
+  <svg class="stars" viewBox="0 0 1080 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="#F5D63D">
+      <circle cx="80" cy="60" r="2" opacity=".8"/><circle cx="210" cy="130" r="1.5" opacity=".5"/><circle cx="340" cy="40" r="2.5" opacity=".7"/>
+      <circle cx="520" cy="110" r="1.5" opacity=".6"/><circle cx="640" cy="50" r="2" opacity=".5"/><circle cx="760" cy="150" r="1.5" opacity=".7"/>
+      <circle cx="900" cy="80" r="2" opacity=".6"/><circle cx="150" cy="260" r="1.5" opacity=".4"/><circle cx="980" cy="260" r="2" opacity=".5"/>
+      <circle cx="460" cy="230" r="1.5" opacity=".4"/><circle cx="30" cy="420" r="2" opacity=".4"/><circle cx="1040" cy="420" r="1.5" opacity=".5"/>
+    </g>
+  </svg>
+  <svg class="moon" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="#F3EBC9"/><circle cx="67" cy="38" r="36" fill="#0C1510"/></svg>
+  <svg class="nettle" width="96" height="125" style="left:-40px; bottom:-34px; transform:rotate(-30deg); opacity:.85;" aria-hidden="true"><use href="#nettle"/></svg>
+
+  <div class="wrap rel">
+    <p class="mono kicker">Rec · Something is hidden near you</p>
+    <h1>Treasure<span class="pink">Hunt
+      <svg class="trail" viewBox="0 0 300 110" preserveAspectRatio="none" fill="none" aria-hidden="true">
+        <path d="M4 80 C 60 20, 110 110, 170 60 S 240 20, 262 50" stroke="#EDE6D6" stroke-width="3" stroke-dasharray="10 9" stroke-linecap="round" opacity=".8"/>
+        <path d="M268 34 L292 58 M292 34 L268 58" stroke="#FF8FC7" stroke-width="8" stroke-linecap="round"/>
+      </svg></span></h1>
+    <p class="lede">Draw a map. Hide the clues. Watch your friends lose their minds in the long grass.</p>
+    <div class="ctas">
+      <a class="btn" href="#build">Build your hunt · $20</a>
+      <a class="btn ghost" href="#how">How it works</a>
+    </div>
+    <p class="meta mono"><span>4 years running</span><span>Phones only</span><span>No apps to download</span></p>
+  </div>
+  <svg class="banana" viewBox="0 0 150 108" aria-hidden="true"><use href="#banana"/></svg>
+</section>
+
+<div class="ticker" aria-hidden="true">
+  <div class="track mono">
+    <span><b>▶</b> Live leaderboard</span><span><b>▶</b> Hunt clock</span><span><b>▶</b> Photo &amp; video challenges</span><span><b>▶</b> Hidden QR codes</span><span><b>▶</b> Judges' dashboard</span><span><b>▶</b> Crew selfies</span><span><b>▶</b> Anti-cheat routes</span><span><b>▶</b> Your own link</span>
+    <span><b>▶</b> Live leaderboard</span><span><b>▶</b> Hunt clock</span><span><b>▶</b> Photo &amp; video challenges</span><span><b>▶</b> Hidden QR codes</span><span><b>▶</b> Judges' dashboard</span><span><b>▶</b> Crew selfies</span><span><b>▶</b> Anti-cheat routes</span><span><b>▶</b> Your own link</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <svg class="nettle" width="96" height="125" style="right:-38px; top:-20px; transform:rotate(28deg); opacity:.85;" aria-hidden="true"><use href="#nettle"/></svg>
+  <div class="wrap rel">
+    <span class="mono kicker">The method · 8 tapes</span>
+    <h2>How a hunt gets made</h2>
+    <p class="intro">The same process behind four years of birthday hunts, packed into a builder. You pick. We do the fiddly bits.</p>
+
+    <div class="grid two">
+      <article class="card step">
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 01</span><span>Map</span></div>
+        <h3>Draw your patch</h3>
+        <p>Trace your hunting ground on the map. A park, a neighbourhood, a festival field. Everything happens inside the line.</p>
+      </article>
+
+      <article class="card step">
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 02</span><span>Stops</span></div>
+        <h3>Pick your stops</h3>
+        <p>Choose how long the chaos lasts, then name the places: pubs, shops, landmarks, the suspicious bench.</p>
+        <div class="durations">
+          <div class="dur"><span class="n">4–6</span><span class="t">45 min – 1 hr</span><span class="tag">Quick</span></div>
+          <div class="dur"><span class="n">7–8</span><span class="t">1.5 – 2 hrs</span><span class="tag">Classic</span></div>
+          <div class="dur"><span class="n">9–10</span><span class="t">2.5 – 3 hrs</span><span class="tag">Epic</span></div>
+        </div>
+      </article>
+
+      <article class="card step">
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 03</span><span>Theme</span></div>
+        <h3>Pick a vibe</h3>
+        <p>Generate a theme, from bananas and bubblegum to film noir. It sets the colours, the tone and the riddles.</p>
+      </article>
+
+      <article class="card step">
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 04</span><span>Crews</span></div>
+        <h3>Assemble the crews</h3>
+        <p>Name the teams and add the players yourself, or let each crew christen itself on the night. Every crew gets its own secret route.</p>
+      </article>
+
+      <article class="card step">
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 05</span><span>Challenges</span></div>
+        <h3>Set the challenges</h3>
+        <p>Decide what proves a crew was really there.</p>
+        <div class="chips"><span class="chip">Scan a QR</span><span class="chip">Code / answer</span><span class="chip">Photo</span><span class="chip">Video</span><span class="chip">Crew selfie</span></div>
+      </article>
+
+      <article class="card step">
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 06</span><span>Clues</span></div>
+        <h3>Write the riddles</h3>
+        <p>Draft a clue for every stop. Get a nudge when you're stuck, or keep it cryptic and cruel. Your call.</p>
+      </article>
+
+      <article class="card step">
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 07</span><span>Test</span></div>
+        <h3>Print &amp; rehearse</h3>
+        <p>Download a print-ready sheet of QR codes, walk the route in test mode, then wipe it clean for the real thing.</p>
+      </article>
+
+      <article class="card step live">
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 08</span><span>Live</span></div>
+        <h3>Go live</h3>
+        <p>Your hunt runs on its own link, like <span class="mono" style="font-size:13px; letter-spacing:0.04em; text-transform:none; color: var(--banana);">yourparty.treasurehunt.world</span>. Players just scan and play.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="padding-top: 24px;">
+  <div class="wrap">
+    <span class="mono kicker">On the night</span>
+    <h2>Everything you need to referee chaos</h2>
+    <p class="intro">Players use their phone camera. You hold the power.</p>
+
+    <div class="grid two">
+      <div class="card feature">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect x="5" y="22" width="8" height="13" rx="2" fill="#2F5A3B" stroke="#7FC48E" stroke-width="1.5"/><rect x="16" y="10" width="8" height="25" rx="2" fill="#FF8FC7"/><rect x="27" y="16" width="8" height="19" rx="2" fill="#2F5A3B" stroke="#7FC48E" stroke-width="1.5"/></svg>
+        <div><h3>Live leaderboard</h3><p>Every crew's progress, live. Ranks shuffle the moment a clue falls.</p></div>
+      </div>
+      <div class="card feature">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="22" r="13" stroke="#F5D63D" stroke-width="2.5"/><path d="M20 22 L20 14 M16 5 L24 5 M20 5 L20 9" stroke="#F5D63D" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div><h3>Hunt clock</h3><p>One shared stopwatch for everyone. It stops when the final selfie lands.</p></div>
+      </div>
+      <div class="card feature">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect x="4" y="6" width="14" height="13" rx="3" stroke="#7FC48E" stroke-width="2"/><rect x="22" y="6" width="14" height="13" rx="3" fill="#FF8FC7"/><rect x="4" y="22" width="14" height="13" rx="3" fill="#F5D63D"/><rect x="22" y="22" width="14" height="13" rx="3" stroke="#7FC48E" stroke-width="2"/></svg>
+        <div><h3>The gallery</h3><p>Every photo and video in one wall. Stick it on a screen at the after-party.</p></div>
+      </div>
+      <div class="card feature">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect x="4" y="8" width="32" height="24" rx="4" stroke="#7FC48E" stroke-width="2"/><path d="M4 12 L20 23 L36 12" stroke="#7FC48E" stroke-width="2"/><circle cx="33" cy="9" r="6" fill="#FF4D4D"/></svg>
+        <div><h3>Judges' dashboard</h3><p>Approve or reject submissions from your phone, with an email every time a crew sends proof.</p></div>
+      </div>
+      <div class="card feature">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M6 32 C 12 14, 22 30, 26 16 S 34 8, 36 8" stroke="#EDE6D6" stroke-width="2.5" stroke-dasharray="4 4" stroke-linecap="round"/><path d="M30 4 L36 10 M36 4 L30 10" stroke="#FF8FC7" stroke-width="3" stroke-linecap="round"/></svg>
+        <div><h3>No cheating</h3><p>Each crew gets its own order of stops. Scan out of turn and the hunt simply says: not yet.</p></div>
+      </div>
+      <div class="card feature">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect x="10" y="3" width="20" height="34" rx="5" stroke="#F5D63D" stroke-width="2.5"/><rect x="15" y="10" width="10" height="10" fill="#F5D63D"/><path d="M17 30 L23 30" stroke="#F5D63D" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div><h3>No app to install</h3><p>It all runs in the browser. Point a camera at a QR and you're in.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROOF -->
+<section id="proof" style="padding-top: 24px;">
+  <svg class="nettle" width="96" height="125" style="right:-34px; top:-6px; transform:rotate(24deg); opacity:.85;" aria-hidden="true"><use href="#nettle"/></svg>
+  <div class="wrap rel">
+    <span class="mono kicker">Found footage</span>
+    <h2>Tested on real humans</h2>
+    <div class="stats">
+      <div class="stat"><b>4</b><span>Years</span></div>
+      <div class="stat"><b>~50</b><span>Hunters a year</span></div>
+      <div class="stat"><b>0</b><span>Crocodiles fed</span></div>
+    </div>
+
+    <!-- Replace each .frame's placeholder with <img src="media/your-photo.jpg" alt="..."> -->
+    <div class="reel">
+      <div class="frame"><span class="lbl">TAPE 01</span></div>
+      <div class="frame"><span class="lbl">TAPE 02</span></div>
+      <div class="frame"><span class="lbl">TAPE 03</span></div>
+      <div class="frame"><span class="lbl">TAPE 04</span></div>
+    </div>
+
+    <div class="grid two" style="margin-top: 16px;">
+      <!-- Replace with real reviews -->
+      <blockquote class="card quote" style="margin:0;">"Review from a past hunter goes here."<cite class="mono">— Name, Crew name</cite></blockquote>
+      <blockquote class="card quote" style="margin:0;">"Another review goes here."<cite class="mono">— Name, Crew name</cite></blockquote>
+    </div>
+  </div>
+</section>
+
+<!-- PRICE -->
+<section id="build" style="padding-top: 24px;">
+  <div class="wrap">
+    <div class="card price">
+      <span class="mono kicker">One hunt · One price</span>
+      <div class="amount"><sup>$</sup>20</div>
+      <p class="per">Build it, run it, keep the gallery.</p>
+      <ul>
+        <li>Up to 10 stops, unlimited crews</li>
+        <li>Your own hunt link for the night</li>
+        <li>Leaderboard, clock, gallery and judges' dashboard</li>
+        <li>Print-ready QR sheet and test mode</li>
+      </ul>
+      <p style="font-size: 19px;">The builder is nearly ready. Leave your email and we'll send the first keys.</p>
+      <!-- Swap the action for a real form endpoint (e.g. Formspree) when ready -->
+      <form class="signup" action="mailto:hello@treasurehunt.world" method="post" enctype="text/plain">
+        <label class="visually-hidden" for="email" style="position:absolute; left:-9999px;">Email address</label>
+        <input id="email" name="email" type="email" placeholder="you@email.com" autocomplete="email" required>
+        <button class="btn" type="submit">Get early access</button>
+      </form>
+      <p class="fine mono">Prices in USD</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" style="padding-top: 24px;">
+  <div class="wrap" style="max-width: 760px;">
+    <span class="mono kicker">Questions from the long grass</span>
+    <h2>Before you ask</h2>
+    <div style="margin-top: 26px;">
+      <details><summary>Do players need to download anything?</summary><p>No. Everything runs in the phone's browser. Scan the first QR and you're in.</p></details>
+      <details><summary>How big can a crew be?</summary><p>Anything from a pair to a dozen. Most hunts work best with crews of four to six.</p></details>
+      <details><summary>Does it work anywhere?</summary><p>Anywhere you can draw on a map and get phone signal: parks, high streets, campuses, festival fields, your aunt's enormous garden.</p></details>
+      <details><summary>Who judges the photos and videos?</summary><p>You do, from your phone. Each submission lands in your dashboard and your inbox. Approve it and the crew's next clue appears instantly.</p></details>
+      <details><summary>Can you run a hunt for us?</summary><p>For bigger events, yes. Get in touch and tell us what you're plotting.</p></details>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <svg class="croc-strip" viewBox="0 0 1040 70" fill="none" aria-hidden="true">
+      <path d="M0 50 Q 26 42 52 50 T 104 50 T 156 50 T 208 50 T 260 50 T 312 50 T 364 50 T 416 50 T 468 50 T 520 50 T 572 50 T 624 50 T 676 50 T 728 50 T 780 50 T 832 50 T 884 50 T 936 50 T 988 50 T 1040 50" stroke="#2F5A3B" stroke-width="2"/>
+      <path d="M560 50 l8 -10 l8 10 M584 50 l8 -12 l8 12" stroke="#5FA86B" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M640 50 Q 648 20 672 20 Q 694 20 700 50 Z" fill="#3F7A4E" stroke="#7FC48E" stroke-width="2"/>
+      <path d="M714 50 Q 722 20 746 20 Q 768 20 774 50 Z" fill="#3F7A4E" stroke="#7FC48E" stroke-width="2"/>
+      <ellipse cx="671" cy="36" rx="11" ry="8" fill="#F5D63D"/><ellipse cx="671" cy="36" rx="2.5" ry="7" fill="#0C1510"/>
+      <ellipse cx="745" cy="36" rx="11" ry="8" fill="#F5D63D"/><ellipse cx="745" cy="36" rx="2.5" ry="7" fill="#0C1510"/>
+      <path d="M900 50 Q 906 36 916 38 Q 924 40 926 50 Z M932 50 Q 938 36 948 38 Q 956 40 958 50 Z" fill="#3F7A4E" stroke="#7FC48E" stroke-width="2"/>
+    </svg>
+    <div class="foot mono">
+      <span>Please do not feed the crocodiles</span>
+      <span>© 2026 treasurehunt.world</span>
+      <a href="mailto:hello@treasurehunt.world" style="color: var(--pink);">hello@treasurehunt.world</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
