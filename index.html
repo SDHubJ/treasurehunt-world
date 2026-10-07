@@ -147,11 +147,12 @@ html { overflow-x: clip; }
 .reel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 @media (min-width: 720px) { .reel { grid-template-columns: repeat(4, 1fr); } }
 .frame {
+  margin: 0;
   aspect-ratio: 4 / 5; border-radius: 16px; border: 1.5px solid var(--line); overflow: hidden; position: relative;
   background: repeating-linear-gradient(45deg, #13241A 0 12px, #10201A 12px 24px);
   display: flex; align-items: flex-end; padding: 12px;
 }
-.frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
 .frame .lbl { position: relative; font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--cream); background: rgba(12, 21, 16, 0.75); padding: 3px 8px; border-radius: 6px; }
 .quote { font-size: 21px; font-style: italic; line-height: 1.45; }
 .quote cite { display: block; margin-top: 12px; font-style: normal; color: var(--leaf-dim); }
@@ -368,19 +369,13 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
       <div class="stat"><b>0</b><span>Crocodiles fed</span></div>
     </div>
 
-    <!-- Replace each .frame's placeholder with <img src="media/your-photo.jpg" alt="..."> -->
     <div class="reel">
-      <div class="frame"><span class="lbl">TAPE 01</span></div>
-      <div class="frame"><span class="lbl">TAPE 02</span></div>
-      <div class="frame"><span class="lbl">TAPE 03</span></div>
-      <div class="frame"><span class="lbl">TAPE 04</span></div>
+      <figure class="frame"><img src="media/banana-hats.jpg" alt="A crew in banana hats pulling faces in a pub" loading="lazy" width="1000" height="750"><figcaption class="lbl">Banana hats</figcaption></figure>
+      <figure class="frame"><img src="media/album-cover.jpg" alt="A crew striking an album-cover pose on a basketball court at night, one in a banana balaclava" loading="lazy" width="750" height="1000"><figcaption class="lbl">Album cover</figcaption></figure>
+      <figure class="frame"><img src="media/finish-line.jpg" alt="A crew grinning outside the pub at the finish line, captain in a banana hat" loading="lazy" width="750" height="1000"><figcaption class="lbl">Finish line</figcaption></figure>
+      <figure class="frame"><img src="media/night-shift.jpg" alt="Hunters spilling onto a lamp-lit street at night" loading="lazy" width="562" height="1000"><figcaption class="lbl">Night shift</figcaption></figure>
     </div>
 
-    <div class="grid two" style="margin-top: 16px;">
-      <!-- Replace with real reviews -->
-      <blockquote class="card quote" style="margin:0;">"Review from a past hunter goes here."<cite class="mono">— Name, Crew name</cite></blockquote>
-      <blockquote class="card quote" style="margin:0;">"Another review goes here."<cite class="mono">— Name, Crew name</cite></blockquote>
-    </div>
   </div>
 </section>
 
