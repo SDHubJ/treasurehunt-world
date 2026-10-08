@@ -177,3 +177,12 @@ ol.howto { margin: 0; padding-left: 22px; display: flex; flex-direction: column;
 .reveal { animation: reveal .45s ease-out; }
 @keyframes reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .spinner, .reveal { animation: none; } .btn:active { transform: none; } }
+/* Builder: clue ideas */
+.ideas summary { cursor: pointer; list-style: none; }
+.ideas summary::-webkit-details-marker { display: none; }
+.ideas summary::before { content: "+ "; color: var(--accent); font-weight: 700; }
+.ideas[open] summary::before { content: "– "; }
+.idea { width: 100%; transition: border-color .15s ease, transform .15s ease; }
+.idea:hover { border-color: var(--accent); }
+.idea:active { transform: scale(.99); }
+.idea .spread { gap: 10px; flex-wrap: wrap; }

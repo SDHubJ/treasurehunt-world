@@ -10,6 +10,10 @@ window.TH_CONFIG = {
   // Hosts copy this sheet to get their own hunt engine. See SETUP.md, step 1.
   TEMPLATE_ID: 'PASTE_TEMPLATE_SHEET_ID_HERE',
 
+  // Stripe Payment Link for unlocking a hunt. The hunt id is added as client_reference_id.
+  PAY_LINK: 'https://buy.stripe.com/6oUeVcanpezuf2b2E6a3u00',
+  PRICE: '£25',
+
   MAX_UPLOAD_MB: 30,
   POLL_PENDING_MS: 7000,
   POLL_IDLE_MS: 30000

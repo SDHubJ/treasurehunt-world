@@ -111,6 +111,13 @@
     r = ref(r);
     return site() + '/play/?' + (r.kind === 'cloud' ? 'h=' : 'g=') + encodeURIComponent(r.id) + (token ? '&c=' + encodeURIComponent(token) : '');
   }
+  /** Stripe Payment Link for one hunt. The webhook reads client_reference_id to unlock it. */
+  function payUrl(r, email) {
+    if (!cfg.PAY_LINK) return '';
+    let u = cfg.PAY_LINK + (cfg.PAY_LINK.indexOf('?') === -1 ? '?' : '&') + 'client_reference_id=' + encodeURIComponent(ref(r).id);
+    if (email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) u += '&prefilled_email=' + encodeURIComponent(email);
+    return u;
+  }
   function hostLink(r, key) { r = ref(r); return site() + '/host/#h=' + r.id + '.' + key; }
   function qrSvg(text, cell) {
     if (!window.qrcode) return '';
@@ -214,7 +221,7 @@
 
   window.TH = {
     cfg: cfg, THEMES: THEMES, applyTheme: applyTheme,
-    ref: ref, apiUrl: apiUrl, idFromUrl: idFromUrl, get: get, post: post, hostLink: hostLink,
+    ref: ref, payUrl: payUrl, apiUrl: apiUrl, idFromUrl: idFromUrl, get: get, post: post, hostLink: hostLink,
     lsGet: lsGet, lsSet: lsSet, lsDel: lsDel,
     site: site, playUrl: playUrl, qrSvg: qrSvg, templateCopyUrl: templateCopyUrl,
     el: el, renderDots: renderDots, fmtClock: fmtClock, runClock: runClock, ordinal: ordinal,
