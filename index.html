@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Treasure Hunt World · Build your own treasure hunt</title>
-<meta name="description" content="Draw a map, hide the clues, set the challenges. Build your own phone-based treasure hunt with live leaderboard, hunt clock, gallery and judging. One hunt, $20.">
+<title>Treasure Hunt World · Plan and build your own treasure hunt</title>
+<meta name="description" content="Plan and build your own treasure hunt in a step-by-step builder. Pick the stops, write the clues, set photo, video and QR challenges. Crews play on their phones with a live leaderboard, hunt clock and gallery. Free to build, £25 to go live.">
 <meta name="theme-color" content="#0C1510">
 <meta property="og:title" content="Treasure Hunt World">
-<meta property="og:description" content="Something is hidden near you. Build your own treasure hunt.">
+<meta property="og:description" content="Plan and build your own treasure hunt. Free to build, £25 to go live, played on phones.">
 <meta property="og:url" content="https://treasurehunt.world/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230C1510'/%3E%3Cpath d='M9 9 L23 23 M23 9 L9 23' stroke='%23FF8FC7' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -166,12 +166,6 @@ summary::after { content: "+"; position: absolute; right: 0; top: 12px; font-fam
 details[open] summary::after { transform: rotate(45deg); }
 details p { color: var(--cream-dim); padding-bottom: 18px; font-size: 17px; }
 
-/* Waitlist */
-.signup { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
-@media (min-width: 560px) { .signup { flex-direction: row; } }
-.signup input { flex: 1 1 auto; font: inherit; font-size: 17px; color: var(--cream); background: var(--night); border: 1.5px solid var(--line); border-radius: 999px; padding: 14px 20px; min-height: 52px; }
-.signup input::placeholder { color: #8A9A8E; }
-
 /* Footer */
 footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
 .croc-strip { width: 100%; height: auto; display: block; margin-bottom: 18px; }
@@ -212,7 +206,7 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
       <span class="rec-dot" aria-hidden="true"></span>
       <b>treasurehunt<i>.world</i></b>
     </a>
-    <a class="btn small" href="#build">Build yours</a>
+    <a class="btn small" href="/build/">Build a hunt</a>
   </div>
 </header>
 
@@ -232,26 +226,26 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
   <svg class="nettle" width="96" height="125" style="left:-40px; bottom:-34px; transform:rotate(-30deg); opacity:.85;" aria-hidden="true"><use href="#nettle"/></svg>
 
   <div class="wrap rel">
-    <p class="mono kicker">Rec · Something is hidden near you</p>
+    <p class="mono kicker">Rec · The treasure hunt builder</p>
     <h1>Treasure<span class="pink">Hunt
       <svg class="trail" viewBox="0 0 300 110" preserveAspectRatio="none" fill="none" aria-hidden="true">
         <path d="M4 80 C 60 20, 110 110, 170 60 S 240 20, 262 50" stroke="#EDE6D6" stroke-width="3" stroke-dasharray="10 9" stroke-linecap="round" opacity=".8"/>
         <path d="M268 34 L292 58 M292 34 L268 58" stroke="#FF8FC7" stroke-width="8" stroke-linecap="round"/>
       </svg></span></h1>
-    <p class="lede">Draw a map. Hide the clues. Watch your friends lose their minds in the long grass.</p>
+    <p class="lede">Plan and build your own treasure hunt, step by step. Pick the stops, write the clues, set the challenges. Your friends play it on their phones.</p>
     <div class="ctas">
-      <a class="btn" href="#build">Build your hunt · $20</a>
+      <a class="btn" href="/build/">Start building, free</a>
       <a class="btn ghost" href="#how">How it works</a>
     </div>
-    <p class="meta mono"><span>4 years running</span><span>Phones only</span><span>No apps to download</span></p>
+    <p class="meta mono"><span>Free to build</span><span>£25 to go live</span><span>No app to download</span></p>
   </div>
   <svg class="banana" viewBox="0 0 150 108" aria-hidden="true"><use href="#banana"/></svg>
 </section>
 
 <div class="ticker" aria-hidden="true">
   <div class="track mono">
-    <span><b>▶</b> Live leaderboard</span><span><b>▶</b> Hunt clock</span><span><b>▶</b> Photo &amp; video challenges</span><span><b>▶</b> Hidden QR codes</span><span><b>▶</b> Judges' dashboard</span><span><b>▶</b> Crew selfies</span><span><b>▶</b> Anti-cheat routes</span><span><b>▶</b> Your own link</span>
-    <span><b>▶</b> Live leaderboard</span><span><b>▶</b> Hunt clock</span><span><b>▶</b> Photo &amp; video challenges</span><span><b>▶</b> Hidden QR codes</span><span><b>▶</b> Judges' dashboard</span><span><b>▶</b> Crew selfies</span><span><b>▶</b> Anti-cheat routes</span><span><b>▶</b> Your own link</span>
+    <span><b>▶</b> Live leaderboard</span><span><b>▶</b> Hunt clock</span><span><b>▶</b> Photo &amp; video challenges</span><span><b>▶</b> Hidden QR codes</span><span><b>▶</b> Judges' dashboard</span><span><b>▶</b> Crew selfies</span><span><b>▶</b> Anti-cheat routes</span><span><b>▶</b> Free to build</span>
+    <span><b>▶</b> Live leaderboard</span><span><b>▶</b> Hunt clock</span><span><b>▶</b> Photo &amp; video challenges</span><span><b>▶</b> Hidden QR codes</span><span><b>▶</b> Judges' dashboard</span><span><b>▶</b> Crew selfies</span><span><b>▶</b> Anti-cheat routes</span><span><b>▶</b> Free to build</span>
   </div>
 </div>
 
@@ -259,21 +253,21 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
 <section id="how">
   <svg class="nettle" width="96" height="125" style="right:-38px; top:-20px; transform:rotate(28deg); opacity:.85;" aria-hidden="true"><use href="#nettle"/></svg>
   <div class="wrap rel">
-    <span class="mono kicker">The method · 8 tapes</span>
-    <h2>How a hunt gets made</h2>
-    <p class="intro">The same process behind four years of birthday hunts, packed into a builder. You pick. We do the fiddly bits.</p>
+    <span class="mono kicker">The builder · 7 steps</span>
+    <h2>How to plan your hunt</h2>
+    <p class="intro">The same planning behind four years of birthday hunts, turned into a builder. It takes you through each decision in order and saves your draft on your device as you go.</p>
 
     <div class="grid two">
       <article class="card step">
-        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 01</span><span>Map</span></div>
-        <h3>Draw your patch</h3>
-        <p>Trace your hunting ground on the map. A park, a neighbourhood, a festival field. Everything happens inside the line.</p>
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Step 01</span><span>Basics</span></div>
+        <h3>Name it, set the patch</h3>
+        <p>Give the hunt a title, say where it happens (a park, a neighbourhood, a festival field) and when it starts. Players see all three before they join.</p>
       </article>
 
       <article class="card step">
-        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 02</span><span>Stops</span></div>
-        <h3>Pick your stops</h3>
-        <p>Choose how long the chaos lasts, then name the places: pubs, shops, landmarks, the suspicious bench.</p>
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Step 02</span><span>Stops</span></div>
+        <h3>Plan the route</h3>
+        <p>Pick a length, then name each stop and write its clue. Reorder them until the route makes sense on foot. The last stop is the finish line for every crew.</p>
         <div class="durations">
           <div class="dur"><span class="n">4–6</span><span class="t">45 min – 1 hr</span><span class="tag">Quick</span></div>
           <div class="dur"><span class="n">7–8</span><span class="t">1.5 – 2 hrs</span><span class="tag">Classic</span></div>
@@ -282,40 +276,35 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
       </article>
 
       <article class="card step">
-        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 03</span><span>Theme</span></div>
-        <h3>Pick a vibe</h3>
-        <p>Generate a theme, from bananas and bubblegum to film noir. It sets the colours, the tone and the riddles.</p>
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Step 03</span><span>Challenges</span></div>
+        <h3>Decide what counts as proof</h3>
+        <p>Each stop gets one challenge. Answers can be checked automatically, or left for you to judge. Put a hidden QR in front of any challenge so crews have to find the spot first.</p>
+        <div class="chips"><span class="chip">Find &amp; scan a QR</span><span class="chip">Answer a question</span><span class="chip">Photo</span><span class="chip">Video</span><span class="chip">Crew selfie finish</span></div>
       </article>
 
       <article class="card step">
-        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 04</span><span>Crews</span></div>
-        <h3>Assemble the crews</h3>
-        <p>Name the teams and add the players yourself, or let each crew christen itself on the night. Every crew gets its own secret route.</p>
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Step 04</span><span>Theme</span></div>
+        <h3>Pick the look</h3>
+        <p>Five looks for everything players see, from the join screen to the leaderboard.</p>
+        <div class="chips"><span class="chip">Bubblegum</span><span class="chip">Night Poster</span><span class="chip">Found Footage</span><span class="chip">Afterparty</span><span class="chip">Picnic</span></div>
       </article>
 
       <article class="card step">
-        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 05</span><span>Challenges</span></div>
-        <h3>Set the challenges</h3>
-        <p>Decide what proves a crew was really there.</p>
-        <div class="chips"><span class="chip">Scan a QR</span><span class="chip">Code / answer</span><span class="chip">Photo</span><span class="chip">Video</span><span class="chip">Crew selfie</span></div>
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Step 05</span><span>Crews</span></div>
+        <h3>Set up the crews</h3>
+        <p>Name the teams and list the players yourself, or let crews name themselves on the night. Up to 30 crews. Each gets its own order of stops, so nobody can just follow the crew ahead.</p>
       </article>
 
       <article class="card step">
-        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 06</span><span>Clues</span></div>
-        <h3>Write the riddles</h3>
-        <p>Draft a clue for every stop. Get a nudge when you're stuck, or keep it cryptic and cruel. Your call.</p>
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Step 06</span><span>Preview</span></div>
+        <h3>Play it before they do</h3>
+        <p>Walk through the whole hunt as any crew, on screen. Pretend-scan the QRs, submit answers, approve photos. Typos and broken routes show up here, not on the night.</p>
       </article>
 
-      <article class="card step">
-        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 07</span><span>Test</span></div>
-        <h3>Print &amp; rehearse</h3>
-        <p>Download a print-ready sheet of QR codes, walk the route in test mode, then wipe it clean for the real thing.</p>
-      </article>
-
-      <article class="card step live">
-        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Tape 08</span><span>Live</span></div>
-        <h3>Go live</h3>
-        <p>Your hunt runs on its own link, like <span class="mono" style="font-size:13px; letter-spacing:0.04em; text-transform:none; color: var(--banana);">yourparty.treasurehunt.world</span>. Players just scan and play.</p>
+      <article class="card step live" style="grid-column: 1 / -1;">
+        <div class="tape mono"><span class="play"><svg width="11" height="11"><use href="#play"/></svg>Step 07</span><span>Live</span></div>
+        <h3>Publish, print, hide</h3>
+        <p>Go live in test mode for free: 2 crews, so you can print the QRs and walk the route. Reset, unlock the hunt for £25, then hide the QRs at the stops. You get a player link and a start QR to send round, plus a private host link for approvals, crews and resets.</p>
       </article>
     </div>
   </div>
@@ -335,7 +324,7 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
       </div>
       <div class="card feature">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="20" cy="22" r="13" stroke="#F5D63D" stroke-width="2.5"/><path d="M20 22 L20 14 M16 5 L24 5 M20 5 L20 9" stroke="#F5D63D" stroke-width="2.5" stroke-linecap="round"/></svg>
-        <div><h3>Hunt clock</h3><p>One shared stopwatch for everyone. It stops when the final selfie lands.</p></div>
+        <div><h3>Hunt clock</h3><p>One shared stopwatch. It starts when the first crew joins and stops when the final selfie lands.</p></div>
       </div>
       <div class="card feature">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect x="4" y="6" width="14" height="13" rx="3" stroke="#7FC48E" stroke-width="2"/><rect x="22" y="6" width="14" height="13" rx="3" fill="#FF8FC7"/><rect x="4" y="22" width="14" height="13" rx="3" fill="#F5D63D"/><rect x="22" y="22" width="14" height="13" rx="3" stroke="#7FC48E" stroke-width="2"/></svg>
@@ -343,7 +332,7 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
       </div>
       <div class="card feature">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><rect x="4" y="8" width="32" height="24" rx="4" stroke="#7FC48E" stroke-width="2"/><path d="M4 12 L20 23 L36 12" stroke="#7FC48E" stroke-width="2"/><circle cx="33" cy="9" r="6" fill="#FF4D4D"/></svg>
-        <div><h3>Judges' dashboard</h3><p>Approve or reject submissions from your phone, with an email every time a crew sends proof.</p></div>
+        <div><h3>Judges' dashboard</h3><p>Every photo, video and judged answer queues on your phone. Approve it and the crew's next clue appears straight away.</p></div>
       </div>
       <div class="card feature">
         <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M6 32 C 12 14, 22 30, 26 16 S 34 8, 36 8" stroke="#EDE6D6" stroke-width="2.5" stroke-dasharray="4 4" stroke-linecap="round"/><path d="M30 4 L36 10 M36 4 L30 10" stroke="#FF8FC7" stroke-width="3" stroke-linecap="round"/></svg>
@@ -379,27 +368,23 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
   </div>
 </section>
 
-<!-- PRICE -->
+<!-- BUILD -->
 <section id="build" style="padding-top: 24px;">
   <div class="wrap">
     <div class="card price">
-      <span class="mono kicker">One hunt · One price</span>
-      <div class="amount"><sup>$</sup>20</div>
-      <p class="per">Build it, run it, keep the gallery.</p>
+      <span class="mono kicker">Free to build · Pay to go live</span>
+      <div class="amount"><sup>£</sup>25</div>
+      <p class="per">per hunt, one-off. Build, preview and test for free first.</p>
       <ul>
-        <li>Up to 10 stops, unlimited crews</li>
-        <li>Your own hunt link for the night</li>
-        <li>Leaderboard, clock, gallery and judges' dashboard</li>
-        <li>Print-ready QR sheet and test mode</li>
+        <li>4 to 10 stops, up to 30 crews</li>
+        <li>QR, answer, photo and video challenges</li>
+        <li>Leaderboard, hunt clock, gallery and judges' dashboard</li>
+        <li>Free test run with 2 crews before you pay</li>
+        <li>Photos and videos kept for 90 days, with a one-tap download</li>
       </ul>
-      <p style="font-size: 19px;">The builder is nearly ready. Leave your email and we'll send the first keys.</p>
-      <!-- Swap the action for a real form endpoint (e.g. Formspree) when ready -->
-      <form class="signup" action="mailto:hello@treasurehunt.world" method="post" enctype="text/plain">
-        <label class="visually-hidden" for="email" style="position:absolute; left:-9999px;">Email address</label>
-        <input id="email" name="email" type="email" placeholder="you@email.com" autocomplete="email" required>
-        <button class="btn" type="submit">Get early access</button>
-      </form>
-      <p class="fine mono">Prices in USD</p>
+      <a class="btn" href="/build/">Start building your hunt</a>
+      <p class="fine mono">No subscription · No sign-up · Secure checkout by Stripe</p>
+      <p class="fine mono" style="margin-top:6px;">Full refund if your hunt hasn't started · <a href="/terms/#refunds">Refund policy</a></p>
     </div>
   </div>
 </section>
@@ -410,10 +395,15 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
     <span class="mono kicker">Questions from the long grass</span>
     <h2>Before you ask</h2>
     <div style="margin-top: 26px;">
+      <details><summary>What does it cost?</summary><p>Building, previewing and a test run with 2 crews are free. Going live for the real thing costs £25 per hunt, paid once. No subscription.</p></details>
+      <details><summary>Can I get a refund?</summary><p>Yes. If no crew has started your hunt, email us within 30 days of paying and we refund the full £25. <a href="/terms/#refunds">Refund policy</a>.</p></details>
+      <details><summary>How long do you keep the photos?</summary><p>90 days after the last upload. Download the whole gallery from your host dashboard before then.</p></details>
+      <details><summary>Do I need an account?</summary><p>No. When you publish, you get a private host link. Keep it: that link is how you get back into your dashboard, on any phone.</p></details>
+      <details><summary>How long does planning take?</summary><p>The builder itself takes minutes. The real work is choosing stops and writing clues, so walk the area first. Most people plan over an evening, then hide the QR codes on the day.</p></details>
       <details><summary>Do players need to download anything?</summary><p>No. Everything runs in the phone's browser. Scan the first QR and you're in.</p></details>
       <details><summary>How big can a crew be?</summary><p>Anything from a pair to a dozen. Most hunts work best with crews of four to six.</p></details>
-      <details><summary>Does it work anywhere?</summary><p>Anywhere you can draw on a map and get phone signal: parks, high streets, campuses, festival fields, your aunt's enormous garden.</p></details>
-      <details><summary>Who judges the photos and videos?</summary><p>You do, from your phone. Each submission lands in your dashboard and your inbox. Approve it and the crew's next clue appears instantly.</p></details>
+      <details><summary>Does it work anywhere?</summary><p>Anywhere with phone signal: parks, high streets, campuses, festival fields, your aunt's enormous garden.</p></details>
+      <details><summary>Who judges the photos and videos?</summary><p>You do, from your phone. Each submission lands in your host dashboard. Approve it and the crew's next clue appears instantly.</p></details>
       <details><summary>Can you run a hunt for us?</summary><p>For bigger events, yes. Get in touch and tell us what you're plotting.</p></details>
     </div>
   </div>
@@ -434,7 +424,7 @@ footer { padding: 30px 0 48px; border-top: 1px solid var(--line); }
     </svg>
     <div class="foot mono">
       <span>Please do not feed the crocodiles</span>
-      <span>© 2026 treasurehunt.world</span>
+      <span>© 2026 treasurehunt.world · <a href="/terms/" style="color: var(--leaf-dim);">Terms</a> · <a href="/terms/#refunds" style="color: var(--leaf-dim);">Refunds</a> · <a href="/terms/#privacy" style="color: var(--leaf-dim);">Privacy</a></span>
       <a href="mailto:hello@treasurehunt.world" style="color: var(--pink);">hello@treasurehunt.world</a>
     </div>
   </div>
