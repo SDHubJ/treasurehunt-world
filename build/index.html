@@ -8,9 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bagel+Fat+One&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Lilita+One&family=Space+Grotesk:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="/app/app.css?v=1">
-<script src="/app/config.js?v=1"></script>
-<script src="/app/th.js?v=1"></script>
+<link rel="stylesheet" href="/app/app.css?v=2">
+<script src="/app/config.js?v=2"></script>
+<script src="/app/th.js?v=2"></script>
+
 <title>Build your hunt · Treasure Hunt World</title>
 </head>
 <body>
@@ -43,6 +44,11 @@
       </div>
       <p class="dim small">Every crew visits every stop in its own order, so nobody can follow the pack. The last stop is the finish line for everyone.</p>
     </section>
+    <details class="card ideas" id="ideas">
+      <summary><strong>Stuck? Steal from a real hunt</strong> <span class="dim small">· clues from London Fields, 2026</span></summary>
+      <p class="dim small" style="margin-top:10px;">Real clues, exactly as crews got them. Tap one to drop it into your next empty stop, then rewrite it for your patch.</p>
+      <div id="ideas-list" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;"></div>
+    </details>
     <div id="stops" style="display:flex; flex-direction:column; gap:14px;"></div>
     <button class="btn secondary" id="add-stop" type="button">+ Add a stop</button>
   </section>
@@ -96,15 +102,23 @@
       <h2>Go live</h2>
       <div id="summary" class="dim"></div>
       <label class="field" for="b-email">Your email<span class="hint">We send your private host link here, plus an alert whenever a crew sends a photo, video or answer to judge.</span><input type="email" id="b-email" placeholder="you@gmail.com" autocomplete="email"></label>
+      <div class="sub-card hidden" id="pay-box">
+        <strong id="pay-title">£25 to go live</strong>
+        <p class="small" style="margin:0;">Building and previewing are free. One payment unlocks this hunt: up to 30 crews, 500 photo and video uploads, and the gallery kept for 90 days after the last upload.</p>
+        <p class="small dim" style="margin:0;">Not ready? Go live in <b>test mode</b> for free: 2 crews and 20 uploads, so you can walk the route and scan the real QR codes. Reset after testing, then unlock.</p>
+      </div>
       <p class="notice bad" id="p-msg" role="status"></p>
       <div class="btn-row">
         <button class="btn" id="publish">Publish and go live</button>
-        <button class="btn secondary" id="save-draft">Save, but don't let crews join yet</button>
+        <button class="btn secondary hidden" id="test-live">Go live in test mode (free)</button>
+        <button class="btn secondary" id="save-draft">Save as draft</button>
       </div>
     </section>
 
     <section class="card hidden" id="done">
       <h3>Your hunt is ready</h3>
+      <div class="notice hidden" id="pay-status" role="status"></div>
+      <button class="btn hidden" id="unlock" type="button" style="align-self:flex-start;">Unlock for £25</button>
       <label class="field">Player link · put it on the start QR<code class="link" id="hunt-link"></code></label>
       <div class="qrbox" id="hunt-qr"></div>
       <label class="field">Your private host link · approvals, QR codes, reset<code class="link" id="host-link-code"></code></label>
@@ -137,6 +151,30 @@
 
   let d = Object.assign({ title: '', area: '', startsAt: '', notifyEmail: '', theme: 'bubblegum', teamMode: 'preset', maxTeams: 6, stops: [], teams: [], step: 0 }, TH.lsGet(DRAFT, {}));
   let conn = TH.lsGet(CONN, null);
+  const CFG = window.TH_CONFIG || {};
+  const PRICE = CFG.PRICE || '£25';
+  const PAYING = 'th.build.paying';
+  let acct = { required: !!CFG.PAY_LINK, paid: !CFG.PAY_LINK, status: '' };
+
+  /* Real clues from Annie & Sam's 2026 hunt in London Fields. */
+  const IDEAS = [
+    { where: 'A restaurant with a car parked outside', type: 'qr', clue: "all I do is talk talk, 365 days a year, you so confusing\nforget about mean girls yea\ngive me digits\n\nnext to a tent with amphoras\nnear this scrap metal crap\n\nbe a mechanic and fix that brat car\nget on your back and go under the bar",
+      how: 'The QR was taped underneath, so crews had to lie on their backs to scan it.' },
+    { where: 'A corner shop', type: 'video', clue: "off to Carl and Apu\nsuper close to you\ntwo doors in, one way out with proof",
+      task: "Blow like Frenchy in Grease.\nWe want to see it: Hubba Bubba, bubble and pop.\nLet the tape roll.", how: 'No QR. The video was the proof, judged from the host dashboard.' },
+    { where: 'A bar under the railway arches', type: 'qr', clue: "Under the arches,\nfind the red light\nholy after Sunday blues\n\nOrder something the scots like,\na mixture of buckfast n bru\nOpen ya palm\nAnd on the way you goos",
+      how: 'Crews ordered the drink. The bartender handed over the QR once it was finished.' },
+    { where: 'A crazy golf bar', type: 'qr', clue: "look for the great white\nwith open teeth,\nand waves cascading\n\nask to go up the lava\nand into the volcano\n\nland the small ball\nto continue the crawl",
+      how: 'The QR sat at the volcano hole. Crews had to sink the putt to reach it.' },
+    { where: 'A rooftop bar', type: 'qr', clue: "near the vault and\nphotoshop\nnear mare street\nwhere fun don't stop\n\nup the stairs\nhealed by dock leaf\nturn around twice\n\nI'll be hiding in the\nfishbowl eye",
+      how: 'The QR was stuck inside a round window at the top of the stairs.' },
+    { where: 'A basketball court', type: 'photo', scanFirst: true, clue: "Head to the hoops\nFind me",
+      task: "Drop it like the Billboard 100.\nGet everyone in the band and send a pic for your next clue.", how: 'A QR inside a vinyl record sleeve, pinned to the court, unlocked the album-cover challenge.' },
+    { where: 'A playground', type: 'qr', clue: "adults just wanna have fun\nskip down to the south eastern corner\n… dancing\n… and a miss\n… vote\nfind me",
+      how: 'Fill-in-the-blank lines pointed to one corner of the park, where the QR was hidden.' },
+    { where: 'The finish: your pub', type: 'photo', final: true, clue: "you've made it so far\nonly one more to go\noh the faces you'll see\nif you just keep going\nto the inn at the end\n🏁",
+      task: 'One selfie. Whole crew in it.\nThe clock stops when it lands.', how: 'Every crew finished at the same pub. The crew selfie stopped the clock.' }
+  ];
 
   function save() { TH.lsSet(DRAFT, d); }
   function uid() { return Math.random().toString(36).slice(2, 8).padEnd(6, '0'); }
@@ -228,6 +266,32 @@
       box.appendChild(card);
     });
   }
+  const TYPE_LABEL = { qr: 'Find & scan a QR', code: 'Answer a question', photo: 'Send a photo', video: 'Send a video' };
+  function renderIdeas() {
+    const box = $('ideas-list'); box.innerHTML = '';
+    IDEAS.forEach(function (x) {
+      const b = el('button', { class: 'sub-card idea', type: 'button', style: 'text-align:left; cursor:pointer; font:inherit; color:inherit;',
+        onclick: function () { useIdea(x); } }, [
+        el('div', { class: 'spread' }, [el('strong', { text: x.where }), el('span', { class: 'badge', text: TYPE_LABEL[x.type] + (x.scanFirst ? ' · QR first' : '') })]),
+        el('p', { class: 'clue', style: 'white-space:pre-line; font-size:16px; margin:6px 0;', text: x.clue }),
+        x.task ? el('p', { class: 'small', style: 'white-space:pre-line; margin:0;' }, [el('b', { text: 'Challenge: ' }), x.task]) : null,
+        el('p', { class: 'small dim', style: 'margin:6px 0 0;', text: x.how })
+      ]);
+      box.appendChild(b);
+    });
+  }
+  function useIdea(x) {
+    const n = d.stops.length;
+    let i = x.final ? n - 1 : d.stops.findIndex(function (s, j) { return j < n - 1 && !s.clue.trim(); });
+    if (i === -1) { alert('Every stop already has a clue. Add a stop first, or clear a clue to reuse it.'); return; }
+    if (x.final && d.stops[i].clue.trim() && !confirm('Replace the clue on your finish line?')) return;
+    Object.assign(d.stops[i], { type: x.type, clue: x.clue, task: x.task || '', answer: '', scanFirst: !!x.scanFirst });
+    save(); renderStops();
+    const cards = document.querySelectorAll('#stops .stopcard');
+    if (cards[i]) { cards[i].scrollIntoView({ behavior: 'smooth', block: 'center' }); const inp = cards[i].querySelector('input'); if (inp && !inp.value) setTimeout(function () { inp.focus(); }, 400); }
+  }
+  renderIdeas();
+
   function move(i, dir) { const j = i + dir; const t = d.stops[i]; d.stops[i] = d.stops[j]; d.stops[j] = t; save(); renderStops(); }
   function field(label, tag, obj, key, attrs, hint) {
     const input = el(tag, Object.assign({ type: tag === 'input' ? 'text' : false }, attrs || {}));
@@ -402,9 +466,61 @@
     const p = problems();
     $('p-msg').className = 'notice bad';
     $('p-msg').textContent = p.length ? 'Before you publish: ' + p.join(' ') : '';
-    $('publish').disabled = $('save-draft').disabled = p.length > 0;
-    $('publish').textContent = conn ? 'Publish changes' : 'Publish and go live';
-    if (conn) showDone();
+    $('publish').disabled = $('save-draft').disabled = $('test-live').disabled = p.length > 0;
+    renderPay();
+    if (conn) { showDone(); refreshAcct(); }
+  }
+
+  function renderPay() {
+    const unpaid = acct.required && !acct.paid;
+    $('pay-box').classList.toggle('hidden', !unpaid);
+    $('pay-title').textContent = PRICE + ' to go live';
+    $('test-live').classList.toggle('hidden', !unpaid || acct.status === 'live');
+    $('publish').textContent = acct.status === 'live' ? 'Publish changes' : (unpaid ? 'Pay ' + PRICE + ' and go live' : 'Publish and go live');
+    const st = $('pay-status');
+    if (!conn || !acct.required) { st.classList.add('hidden'); $('unlock').classList.add('hidden'); return; }
+    st.classList.remove('hidden');
+    if (acct.paid) { st.className = 'notice ok'; st.textContent = 'Unlocked. Up to 30 crews and 500 uploads.'; }
+    else if (acct.status === 'live') { st.className = 'notice bad'; st.textContent = 'Test mode: only 2 crews can play and 20 uploads are allowed. Unlock before the night.'; }
+    else { st.className = 'notice'; st.textContent = 'Saved as a draft. Crews can\'t join yet.'; }
+    $('unlock').textContent = 'Unlock for ' + PRICE;
+    $('unlock').classList.toggle('hidden', acct.paid);
+  }
+  async function refreshAcct() {
+    if (!conn || TH.ref(conn).kind !== 'cloud') return acct;
+    try {
+      const g = await TH.post(conn, 'admin_get', { key: conn.key });
+      acct = { required: !!g.paymentRequired, paid: !!g.paid, status: g.status };
+      renderPay();
+    } catch (e) { /* keep the last known state */ }
+    return acct;
+  }
+  function goPay() {
+    const u = TH.payUrl(conn, d.notifyEmail);
+    if (!u) return;
+    TH.lsSet(PAYING, conn.id);
+    location.href = u;
+  }
+  $('unlock').addEventListener('click', goPay);
+
+  /* Back from Stripe: wait for the webhook to mark the hunt as paid. */
+  async function confirmPayment() {
+    const back = new URLSearchParams(location.search).has('paid');
+    const waiting = TH.lsGet(PAYING, null);
+    if (!conn || (!back && waiting !== conn.id)) return;
+    if (back) history.replaceState(null, '', location.pathname);
+    d.step = LIVE; save(); renderSteps();
+    const msg = $('p-msg');
+    msg.className = 'notice'; msg.textContent = 'Confirming your payment…';
+    for (let i = 0; i < 30; i++) {
+      await refreshAcct();
+      if (acct.paid) { TH.lsDel(PAYING); msg.className = 'notice ok'; msg.textContent = 'Paid. Your hunt is unlocked and live.'; return; }
+      await new Promise(function (r) { setTimeout(r, 2500); });
+    }
+    msg.className = 'notice bad';
+    msg.textContent = back ? 'Payment received by Stripe but not confirmed here yet. Refresh in a minute. If it still says test mode, email hello@treasurehunt.world with your hunt link.'
+      : 'No payment found for this hunt yet. If you closed the payment page, press Unlock to try again.';
+    if (!back) TH.lsDel(PAYING);
   }
 
   function showDone() {
@@ -441,15 +557,25 @@
       d.stops = g.stops.map(function (s) { return { id: s.id, name: s.name, type: s.type, clue: s.clue, task: s.task, answer: s.answer, scanFirst: !!s.scanFirst }; });
       save();
       conn.emailEnabled = !!g.emailEnabled; TH.lsSet(CONN, conn);
-      msg.className = 'notice ok'; msg.textContent = live ? 'Live. Crews can join now.' : 'Saved. Publish when you are ready.';
-      $('publish').textContent = 'Publish changes';
+      acct = { required: !!g.paymentRequired, paid: !!g.paid, status: g.status };
+      renderPay();
+      msg.className = 'notice ok';
+      msg.textContent = !live ? 'Saved. Publish when you are ready.' : (acct.required && !acct.paid ? 'Live in test mode: 2 crews, 20 uploads.' : 'Live. Crews can join now.');
       $('host-link').classList.remove('hidden');
       showDone();
       $('done').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      $('publish').disabled = $('save-draft').disabled = $('test-live').disabled = false;
+      return true;
     } catch (e) { msg.className = 'notice bad'; msg.textContent = e.message; }
-    $('publish').disabled = $('save-draft').disabled = false;
+    $('publish').disabled = $('save-draft').disabled = $('test-live').disabled = false;
+    return false;
   }
-  $('publish').addEventListener('click', function () { publish(true); });
+  $('publish').addEventListener('click', async function () {
+    const mustPay = acct.required && !acct.paid && acct.status !== 'live';
+    if (!(await publish(true))) return;
+    if (mustPay && acct.required && !acct.paid) { $('p-msg').className = 'notice'; $('p-msg').textContent = 'Taking you to secure payment…'; goPay(); }
+  });
+  $('test-live').addEventListener('click', function () { publish(true); });
   $('save-draft').addEventListener('click', function () { publish(false); });
   $('copy-host').addEventListener('click', function () {
     const t = $('host-link-code').textContent, btn = this;
@@ -458,11 +584,12 @@
   });
   $('new-hunt').addEventListener('click', function () {
     if (!confirm('Start a new hunt? This one stays live; open it again any time with its host link.')) return;
-    TH.lsDel(DRAFT); TH.lsDel(CONN); location.reload();
+    TH.lsDel(DRAFT); TH.lsDel(CONN); TH.lsDel(PAYING); location.reload();
   });
 
 
   renderSteps();
+  confirmPayment();
 })();
 </script>
 </body>
