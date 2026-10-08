@@ -4,7 +4,7 @@ window.TH_CONFIG = {
   SITE: 'https://treasurehunt.world',
 
   // Your hunt engine (Cloudflare Worker) address, no trailing slash. See DEPLOY.md.
-  API: 'PASTE_YOUR_WORKER_URL_HERE',
+  API: 'https://treasurehunt-api.samueldhjones.workers.dev',
 
   // Optional, for hosts who want hunts in their own Google account (advanced). ID of the template Google Sheet (the long code in its URL between /d/ and /edit).
   // Hosts copy this sheet to get their own hunt engine. See SETUP.md, step 1.
