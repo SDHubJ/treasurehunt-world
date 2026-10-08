@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFC9DF">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bagel+Fat+One&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Lilita+One&family=Space+Grotesk:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="/app/app.css?v=1">
+<script src="/app/config.js?v=1"></script>
+<script src="/app/th.js?v=1"></script>
+<title>Treasure Hunt</title>
+</head>
+<body>
+<main class="wrap">
+  <div class="topbar">
+    <a class="brand" href="/" id="brand">treasurehunt.world</a>
+    <span class="pill hidden" id="count"></span>
+  </div>
+
+  <!-- JOIN -->
+  <section id="v-join" class="hidden" style="display:flex; flex-direction:column; gap:16px;">
+    <h1 id="j-title"></h1>
+    <p class="notice hidden" id="j-draft">This hunt hasn't started yet. Hold tight.</p>
+
+    <section class="card" id="j-pick">
+      <label class="field" for="j-team">Which crew are you in?
+        <select id="j-team"><option value="">Loading crews…</option></select>
+      </label>
+      <button class="btn" id="j-next" disabled>Next</button>
+    </section>
+
+    <section class="card hidden" id="j-self">
+      <h2>Start a new crew</h2>
+      <label class="field" for="j-new">Crew name
+        <input type="text" id="j-new" maxlength="30" placeholder="e.g. The Midnight Bananas" autocomplete="off">
+      </label>
+      <button class="btn alt" id="j-create">Create crew</button>
+    </section>
+
+    <section class="card hidden" id="j-confirm">
+      <p class="dim" style="font-weight:600;">You're joining</p>
+      <h2 id="j-confirm-team" style="font-size:30px;"></h2>
+      <label class="check" for="j-ready"><input type="checkbox" id="j-ready"><span>The whole crew is here and ready.</span></label>
+      <div class="btn-row">
+        <button class="btn" id="j-start" disabled>Start hunting</button>
+        <button class="btn secondary" id="j-back" type="button">Wrong crew, go back</button>
+      </div>
+      <p class="dim small" id="j-switch"></p>
+    </section>
+    <p class="notice bad" id="j-msg" role="status" aria-live="polite"></p>
+  </section>
+
+  <!-- CLUE -->
+  <section id="v-clue" class="hidden" style="display:flex; flex-direction:column; gap:16px;">
+    <div class="spread"><h2 id="c-team" style="font-size:28px;"></h2></div>
+    <div class="dots" id="c-dots" role="img"></div>
+    <p class="notice" id="c-flash" role="status" aria-live="polite"></p>
+    <div id="c-view" aria-live="polite" style="display:flex; flex-direction:column; gap:16px;"></div>
+    <button class="btn secondary slim hidden" id="c-switch" type="button" style="align-self:flex-start;">Wrong crew? Switch (once only)</button>
+  </section>
+
+  <!-- BOARD -->
+  <section id="v-board" class="hidden" style="display:flex; flex-direction:column; gap:16px;">
+    <h1>Leaderboard</h1>
+    <section class="card">
+      <span class="mono small dim">HUNT CLOCK</span>
+      <span class="clock" id="b-clock" role="timer">0:00:00</span>
+      <p class="dim small" id="b-note">Starts when the first crew sets off.</p>
+    </section>
+    <ol class="board" id="b-list"></ol>
+  </section>
+
+  <!-- GALLERY -->
+  <section id="v-gallery" class="hidden" style="display:flex; flex-direction:column; gap:16px;">
+    <h1>Gallery</h1>
+    <p class="dim" id="g-count">Loading…</p>
+    <ul class="grid four" id="g-grid"></ul>
+  </section>
+
+  <p class="notice bad" id="fatal" role="alert"></p>
+</main>
+
+<nav class="tabs hidden" id="tabs" aria-label="Hunt">
+  <a href="#clue" data-v="clue">Clue</a>
+  <a href="#board" data-v="board">Leaderboard</a>
+  <a href="#gallery" data-v="gallery">Gallery</a>
+</nav>
+
+<dialog id="viewer" aria-labelledby="viewer-title">
+  <div class="spread" style="margin-bottom:10px;"><strong id="viewer-title"></strong><button class="btn secondary slim" id="viewer-close" type="button">Close</button></div>
+  <div id="viewer-body"></div>
+</dialog>
+
+<script>
+(async function () {
+  const $ = function (id) { return document.getElementById(id); };
+  const el = TH.el;
+  const params = new URLSearchParams(location.search);
+  const gid = params.get('h') || params.get('g') || TH.lsGet('th.lastGame', '');
+  const code = params.get('c') || '';
+  if (!gid) { $('fatal').textContent = 'This page needs a hunt link. Scan the QR your host gave you.'; return; }
+  if (TH.ref(gid).kind === 'gas') { try { TH.apiUrl(gid); } catch (e) { $('fatal').textContent = e.message; return; } }
+  TH.lsSet('th.lastGame', gid);
+  if (code || !(params.get('h') || params.get('g'))) history.replaceState(null, '', '?' + (TH.ref(gid).kind === 'cloud' ? 'h=' : 'g=') + encodeURIComponent(gid) + location.hash);
+
+  const K = { team: 'th.' + gid + '.team', switches: 'th.' + gid + '.switches', pending: 'th.' + gid + '.pendingCode', flash: 'th.' + gid + '.flash' };
+  let info = null, state = null, lastKey = '', busy = false, timer = null;
+
+  TH.applyTheme(TH.lsGet('th.' + gid + '.theme', 'bubblegum'));
+  try {
+    info = await TH.get(gid, 'info');
+    TH.applyTheme(info.theme); TH.lsSet('th.' + gid + '.theme', info.theme);
+    document.title = info.title;
+  } catch (e) { $('fatal').textContent = e.message; return; }
+
+  /* ---------- routing ---------- */
+  function team() { return TH.lsGet(K.team, ''); }
+  function view() {
+    const v = (location.hash || '#clue').slice(1);
+    if (!team() && v === 'clue') return 'join';
+    return ['clue', 'board', 'gallery'].indexOf(v) !== -1 ? v : 'clue';
+  }
+  function show() {
+    const v = view();
+    ['join', 'clue', 'board', 'gallery'].forEach(function (n) { $('v-' + n).classList.toggle('hidden', n !== v); });
+    $('tabs').classList.toggle('hidden', v === 'join');
+    document.querySelectorAll('.tabs a').forEach(function (a) { if (a.dataset.v === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    clearTimeout(timer);
+    if (v === 'join') renderJoin();
+    if (v === 'clue') { lastKey = ''; refresh(); }
+    if (v === 'board') loadBoard();
+    if (v === 'gallery') loadGallery();
+  }
+  window.addEventListener('hashchange', show);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) show(); });
+
+  /* ---------- join ---------- */
+  let chosen = '';
+  function renderJoin() {
+    $('j-title').innerHTML = '';
+    $('j-title').append(info.title);
+    $('j-draft').classList.toggle('hidden', info.live);
+    const sel = $('j-team');
+    sel.innerHTML = '';
+    if (info.teams.length) {
+      sel.appendChild(el('option', { value: '', text: info.teamMode === 'self' ? 'Join an existing crew' : 'Choose your crew' }));
+      info.teams.forEach(function (t) { sel.appendChild(el('option', { value: t, text: t })); });
+      $('j-pick').classList.remove('hidden');
+    } else {
+      $('j-pick').classList.toggle('hidden', info.teamMode === 'self');
+      sel.appendChild(el('option', { value: '', text: 'No crews yet' }));
+    }
+    $('j-self').classList.toggle('hidden', !(info.teamMode === 'self' && info.canCreate));
+  }
+  $('j-team').addEventListener('change', function () { $('j-next').disabled = !$('j-team').value; });
+  $('j-next').addEventListener('click', function () { openConfirm($('j-team').value); });
+  $('j-create').addEventListener('click', async function () {
+    const name = $('j-new').value.trim();
+    if (!name) return;
+    this.disabled = true; $('j-msg').textContent = '';
+    try { const r = await TH.post(gid, 'create_team', { name: name }); info = await TH.get(gid, 'info'); openConfirm(r.team); }
+    catch (e) { $('j-msg').textContent = e.message; }
+    this.disabled = false;
+  });
+  function openConfirm(t) {
+    chosen = t;
+    $('j-confirm-team').textContent = t;
+    $('j-ready').checked = false; $('j-start').disabled = true;
+    const left = 1 - (TH.lsGet(K.switches, 0) || 0);
+    $('j-switch').textContent = left > 0 ? 'Choose carefully. You can switch crews once.' : "You've used your one switch. This one's final.";
+    ['j-pick', 'j-self'].forEach(function (id) { $(id).classList.add('hidden'); });
+    $('j-confirm').classList.remove('hidden');
+  }
+  $('j-ready').addEventListener('change', function () { $('j-start').disabled = !this.checked; });
+  $('j-back').addEventListener('click', function () { $('j-confirm').classList.add('hidden'); renderJoin(); });
+  $('j-start').addEventListener('click', async function () {
+    this.disabled = true; this.textContent = 'Starting…'; $('j-msg').textContent = '';
+    try {
+      await TH.post(gid, 'join', { team: chosen });
+      TH.lsSet(K.team, chosen);
+      $('j-confirm').classList.add('hidden');
+      const c = TH.lsGet(K.pending, '');
+      if (c) { TH.lsDel(K.pending); await checkin(c); }
+      location.hash = '#clue'; show();
+    } catch (e) { $('j-msg').textContent = e.message; this.disabled = false; this.textContent = 'Start hunting'; }
+  });
+
+  /* ---------- clue ---------- */
+  function flash(text, kind) { $('c-flash').textContent = text || ''; $('c-flash').className = 'notice ' + (kind || 'ok'); }
+  async function checkin(c) {
+    try { const s = await TH.post(gid, 'checkin', { team: team(), code: c }); flash(s.message || 'Checked in.', 'ok'); state = s; lastKey = ''; }
+    catch (e) { flash(e.message, 'bad'); }
+  }
+  function schedule() {
+    clearTimeout(timer);
+    if (view() !== 'clue' || (state && state.finished)) return;
+    timer = setTimeout(refresh, state && state.status === 'Pending' ? TH.cfg.POLL_PENDING_MS : TH.cfg.POLL_IDLE_MS);
+  }
+  async function refresh() {
+    if (!team()) return;
+    try {
+      const s = await TH.get(gid, 'state', { team: team() });
+      if (s.status === 'Waiting') { await TH.post(gid, 'join', { team: team() }); return refresh(); }
+      if (state && state.status === 'Pending' && s.index !== state.index) flash('Approved. Here is your next clue.', 'ok');
+      if (state && !state.finished && s.finished) flash('Approved. You are officially home.', 'ok');
+      state = s; render();
+    } catch (e) {
+      if (/don't know that crew/i.test(e.message)) { TH.lsDel(K.team); location.hash = ''; show(); return; }
+      flash(state ? 'Connection wobble. Retrying…' : e.message, 'bad');
+    }
+    schedule();
+  }
+  function render() {
+    const s = state;
+    $('c-team').textContent = s.team;
+    TH.renderDots($('c-dots'), s.index, s.total, s.finished || !!s.finishedAt);
+    $('count').textContent = s.finished ? 'FINISHED' : 'STOP ' + Math.min(s.index + 1, s.total) + '/' + s.total;
+    $('count').classList.remove('hidden');
+    $('c-switch').classList.toggle('hidden', (TH.lsGet(K.switches, 0) || 0) >= 1 || !!s.finishedAt);
+    const key = [s.index, s.status, s.finished, s.rejectionNote || '', s.selfieUrl || ''].join('|');
+    if (key === lastKey || busy) return;
+    const isNew = lastKey !== '';
+    lastKey = key;
+    const v = $('c-view');
+    v.innerHTML = '';
+    if (s.finished || s.finishedAt) return renderFinish(s, v);
+    const st = s.stop;
+    const card = el('section', { class: 'card' + (isNew ? ' reveal' : '') });
+    v.appendChild(card);
+    card.appendChild(el('h2', { text: st.isFinal ? 'Last stop' : 'Your clue' }));
+    card.appendChild(el('p', { class: 'clue', text: st.clue }));
+    if (st.needsScan) card.appendChild(el('p', { class: 'dim', style: 'font-weight:600;', text: 'Found it? Open your camera and scan the QR.' }));
+    if (st.task) { const t = el('div', { class: 'task' }); if (st.isFinal) t.appendChild(el('strong', { text: 'Final task' })); t.append(st.task); card.appendChild(t); }
+    if (s.status === 'Pending') {
+      card.appendChild(el('div', { class: 'waiting' }, [el('span', { class: 'spinner' }), el('span', { text: 'Sent. Waiting for the judges. Your next clue appears here the moment it is approved.' })]));
+      return;
+    }
+    if (s.status === 'Rejected') card.appendChild(el('p', { class: 'notice bad', text: s.rejectionNote ? 'Rejected: ' + s.rejectionNote : 'Rejected. The judges want another go.' }));
+    if (st.canSubmit) card.appendChild(st.type === 'code' ? answerBox() : uploadBox(st.type, st.isFinal));
+  }
+  function renderFinish(s, v) {
+    const pol = el('div', { class: 'polaroid reveal' });
+    if (s.selfieUrl) { const img = el('img', { class: 'photo', src: s.selfieUrl, alt: s.team + ' crew photo' }); img.addEventListener('error', function () { img.removeAttribute('src'); }); pol.appendChild(img); }
+    else pol.appendChild(el('div', { class: 'photo', role: 'img', 'aria-label': 'Finish' }));
+    pol.appendChild(el('div', { class: 'cap' }, [el('span', { text: s.team }), el('span', { text: '🏁' })]));
+    v.appendChild(pol);
+    v.appendChild(el('div', { class: 'stats' }, [
+      el('div', { class: 'stat' }, [el('span', { class: 'label', text: 'Place' }), el('span', { class: 'big', text: s.place ? TH.ordinal(s.place) : '–' })]),
+      el('div', { class: 'stat' }, [el('span', { class: 'label', text: 'Clock stopped' }), el('span', { class: 'time', text: TH.fmtClock(s.elapsedMs) })])
+    ]));
+    if (s.finished) { v.appendChild(el('p', { class: 'notice ok', text: s.place === 1 ? 'First crew home. Drinks are on the losers.' : 'Crew home. Get to the bar.' })); return; }
+    if (s.status === 'Rejected') {
+      const card = el('section', { class: 'card' });
+      card.appendChild(el('p', { class: 'notice bad', text: (s.rejectionNote ? 'Retake: ' + s.rejectionNote : 'Retake needed.') + ' Your time stands.' }));
+      if (s.stop) card.appendChild(s.stop.type === 'code' ? answerBox() : uploadBox(s.stop.type, true));
+      v.appendChild(card); return;
+    }
+    v.appendChild(el('div', { class: 'notice' }, [el('span', { class: 'waiting' }, [el('span', { class: 'spinner' }), el('span', { text: 'Judges are checking. Get to the bar.' })])]));
+  }
+  function answerBox() {
+    const box = el('form', { class: 'btn-row' });
+    const input = el('input', { type: 'text', placeholder: 'Your answer', autocomplete: 'off', 'aria-label': 'Your answer', maxlength: '200' });
+    const status = el('p', { class: 'notice', role: 'status' });
+    const btn = el('button', { class: 'btn', type: 'submit', text: 'Submit answer' });
+    box.append(input, btn, status);
+    box.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!input.value.trim()) return;
+      btn.disabled = true; status.className = 'notice'; status.textContent = 'Checking…';
+      try { const s = await TH.post(gid, 'answer', { team: team(), answer: input.value }); flash(s.message, 'ok'); state = s; lastKey = ''; render(); schedule(); }
+      catch (err) { status.className = 'notice bad'; status.textContent = err.message; btn.disabled = false; }
+    });
+    return box;
+  }
+  function uploadBox(type, isFinal) {
+    const box = el('div', { class: 'btn-row' });
+    const status = el('p', { class: 'notice', role: 'status' });
+    const isVideo = type === 'video';
+    const accept = isVideo ? 'video/*' : 'image/*';
+    const label = isVideo ? 'Record video' : (isFinal ? 'Take crew selfie' : 'Take photo');
+    function picker(text, capture, cls) {
+      const input = el('input', { type: 'file', accept: accept, capture: capture || false, class: 'visually-hidden', tabindex: '-1', 'aria-hidden': 'true' });
+      const b = el('button', { class: cls, type: 'button', text: text, onclick: function () { input.click(); } });
+      input.addEventListener('change', function () { if (input.files && input.files[0]) send(input.files[0]); input.value = ''; });
+      box.append(b, input);
+    }
+    async function send(file) {
+      busy = true;
+      box.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+      status.className = 'notice'; status.textContent = 'Uploading… keep this page open.';
+      try {
+        const payload = await TH.prepareUpload(file, isVideo ? 'video' : 'photo', gid);
+        const s = await TH.post(gid, 'upload', Object.assign({ team: team() }, payload));
+        busy = false; flash(s.message, 'ok'); state = s; lastKey = ''; render(); schedule();
+      } catch (e) {
+        busy = false; status.className = 'notice bad'; status.textContent = e.message;
+        box.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+      }
+    }
+    if (isVideo) box.appendChild(el('p', { class: 'dim small', text: 'Keep it under 30 seconds.' }));
+    picker(label, isFinal && !isVideo ? 'user' : 'environment', 'btn');
+    picker('Choose from library', null, 'btn secondary');
+    box.appendChild(status);
+    return box;
+  }
+  $('c-switch').addEventListener('click', function () {
+    if (!confirm('Switch crews? You can only do this once. ' + team() + ' keeps its progress.')) return;
+    TH.lsSet(K.switches, (TH.lsGet(K.switches, 0) || 0) + 1);
+    TH.lsDel(K.team); state = null; location.hash = ''; show();
+  });
+
+  /* ---------- board ---------- */
+  async function loadBoard() {
+    try {
+      const d = await TH.get(gid, 'leaderboard');
+      TH.runClock($('b-clock'), d.huntStart, d.serverNow);
+      $('b-note').textContent = d.huntStart ? 'Running since ' + new Date(d.huntStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '.' : 'Starts when the first crew sets off.';
+      const list = $('b-list'); list.innerHTML = '';
+      d.teams.forEach(function (r) {
+        const pct = r.total ? Math.round(100 * r.cleared / r.total) : 0;
+        const sub = r.finished ? 'Home' : r.checking ? 'With the judges' : r.status === 'Waiting' ? 'Not started' : r.cleared + ' cleared';
+        const right = (r.finished || r.checking) ? TH.fmtClock(r.elapsedMs) : r.cleared + '/' + r.total;
+        list.appendChild(el('li', { class: 'lb' + (r.team === team() ? ' mine' : '') }, [
+          el('span', { class: 'rank', text: String(r.rank) }),
+          el('div', {}, [el('div', { class: 'name', text: r.team }), el('div', { class: 'sub', text: sub }), el('div', { class: 'bar', 'aria-hidden': 'true' }, [el('span', { style: 'width:' + pct + '%' })])]),
+          el('span', { class: 'right', text: right })
+        ]));
+      });
+    } catch (e) { $('fatal').textContent = e.message; }
+    clearTimeout(timer);
+    if (view() === 'board') timer = setTimeout(loadBoard, 20000);
+  }
+
+  /* ---------- gallery ---------- */
+  async function loadGallery() {
+    try {
+      const d = await TH.get(gid, 'gallery');
+      $('g-count').textContent = d.items.length ? d.items.length + ' so far. Updates by itself.' : 'Nothing yet. Photos and videos appear here as crews send them.';
+      const grid = $('g-grid'); grid.innerHTML = '';
+      d.items.forEach(function (i) {
+        const src = i.url ? i.thumb : 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(i.id) + '&sz=w600';
+        const kids = [];
+        if (src) { const img = el('img', { src: src, alt: i.label + ' by ' + i.team, loading: 'lazy' }); img.addEventListener('error', function () { img.remove(); }); kids.push(img); }
+        else if (i.kind === 'video' && i.url) kids.push(el('video', { src: i.url + '#t=0.1', muted: true, playsinline: true, preload: 'metadata', style: 'width:100%;height:100%;object-fit:cover;' }));
+        if (i.kind === 'video') kids.push(el('span', { class: 'play-badge', 'aria-hidden': 'true', text: '▶' }));
+        grid.appendChild(el('li', { class: 'tile' }, [
+          el('button', { class: 'media', type: 'button', 'aria-label': 'Open ' + i.label + ' by ' + i.team, onclick: function () { openMedia(i); } }, kids),
+          el('div', { class: 'meta' }, [el('strong', { text: i.team }), el('span', { class: 'dim', text: i.label })])
+        ]));
+      });
+    } catch (e) { $('fatal').textContent = e.message; }
+    clearTimeout(timer);
+    if (view() === 'gallery') timer = setTimeout(loadGallery, 30000);
+  }
+  function openMedia(i) {
+    $('viewer-title').textContent = i.team + ' · ' + i.label;
+    const b = $('viewer-body'); b.innerHTML = '';
+    if (i.kind === 'video' && i.url) b.appendChild(el('video', { class: 'frame', src: i.url, controls: true, playsinline: true, autoplay: true, style: 'background:#000' }));
+    else if (i.kind === 'video') b.appendChild(el('iframe', { class: 'frame', src: 'https://drive.google.com/file/d/' + encodeURIComponent(i.id) + '/preview', allow: 'autoplay; fullscreen', title: i.label }));
+    else b.appendChild(el('img', { class: 'frame', src: i.url || 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(i.id) + '&sz=w1600', alt: i.label + ' by ' + i.team }));
+    $('viewer').showModal();
+  }
+  $('viewer-close').addEventListener('click', function () { $('viewer').close(); });
+  $('viewer').addEventListener('close', function () { $('viewer-body').innerHTML = ''; });
+
+  /* ---------- start ---------- */
+  if (code) {
+    if (team()) { await checkin(code); location.hash = '#clue'; }
+    else { TH.lsSet(K.pending, code); }
+  }
+  show();
+})();
+</script>
+</body>
+</html>

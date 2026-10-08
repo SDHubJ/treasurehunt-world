@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFC9DF">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bagel+Fat+One&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Lilita+One&family=Space+Grotesk:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="/app/app.css?v=1">
+<script src="/app/config.js?v=1"></script>
+<script src="/app/th.js?v=1"></script>
+<title>Build your hunt · Treasure Hunt World</title>
+</head>
+<body>
+<main class="wrap">
+  <div class="topbar">
+    <a class="brand" href="/">treasurehunt.world</a>
+    <a class="pill hidden" id="host-link" href="/host/">Host dashboard</a>
+  </div>
+  <h1>Build your <span class="title-hl">hunt</span></h1>
+  <nav class="steps" id="steps" aria-label="Builder steps"></nav>
+
+  <!-- 0 BASICS -->
+  <section class="card step" data-step="0" data-label="Basics">
+    <h2>The basics</h2>
+    <p class="dim small">No sign-up. Everything saves on this device as you go.</p>
+    <label class="field" for="b-title">Hunt name<input type="text" id="b-title" maxlength="80" placeholder="Annie &amp; Sam's Treasure Hunt"></label>
+    <label class="field" for="b-area">Where's the patch?<span class="hint">The area you'll hunt in and where crews meet. Players never see this.</span>
+      <input type="text" id="b-area" maxlength="300" placeholder="London Fields, Hackney. Meet at Pub on the Park."></label>
+    <label class="field" for="b-when">When does it start?<input type="datetime-local" id="b-when"></label>
+  </section>
+
+  <!-- 1 STOPS -->
+  <section class="step hidden" data-step="1" data-label="Stops" style="display:flex; flex-direction:column; gap:16px;">
+    <section class="card">
+      <h2>Pick your stops</h2>
+      <div class="chips" id="len-chips">
+        <button class="chip" type="button" data-n="5" aria-pressed="false">Quick · 4–6 stops · 45–60 min</button>
+        <button class="chip" type="button" data-n="8" aria-pressed="false">Classic · 7–8 · 1.5–2 hrs</button>
+        <button class="chip" type="button" data-n="10" aria-pressed="false">Epic · 9–10 · 2.5–3 hrs</button>
+      </div>
+      <p class="dim small">Every crew visits every stop in its own order, so nobody can follow the pack. The last stop is the finish line for everyone.</p>
+    </section>
+    <div id="stops" style="display:flex; flex-direction:column; gap:14px;"></div>
+    <button class="btn secondary" id="add-stop" type="button">+ Add a stop</button>
+  </section>
+
+  <!-- 2 THEME -->
+  <section class="card step hidden" data-step="2" data-label="Theme">
+    <h2>Pick a vibe</h2>
+    <div class="themes" id="themes"></div>
+    <button class="btn secondary slim" id="surprise" type="button" style="align-self:flex-start;">Surprise me</button>
+  </section>
+
+  <!-- 3 CREWS -->
+  <section class="card step hidden" data-step="3" data-label="Crews">
+    <h2>Assemble the crews</h2>
+    <div class="chips">
+      <button class="chip" type="button" id="mode-preset" aria-pressed="true">I'll name the crews</button>
+      <button class="chip" type="button" id="mode-self" aria-pressed="false">Crews name themselves</button>
+    </div>
+    <div id="preset-box" style="display:flex; flex-direction:column; gap:12px;">
+      <div id="teams" style="display:flex; flex-direction:column; gap:12px;"></div>
+      <div class="row">
+        <button class="btn secondary slim" id="add-team" type="button">+ Add a crew</button>
+        <button class="btn secondary slim" id="gen-names" type="button">Generate names</button>
+      </div>
+    </div>
+    <div id="self-box" class="hidden">
+      <label class="field" for="max-teams">Most crews allowed<input type="number" id="max-teams" min="1" max="30" value="6"></label>
+    </div>
+  </section>
+
+  <!-- 4 PREVIEW -->
+  <section class="step hidden" data-step="4" data-label="Preview" style="display:flex; flex-direction:column; gap:16px;">
+    <section class="card">
+      <h2>Play it through</h2>
+      <p class="dim small">This is exactly what a crew sees, step by step. Try the answers, fake an upload, approve it.</p>
+      <label class="field" for="pv-crew">Play as<select id="pv-crew"></select></label>
+      <p class="small mono dim" id="pv-route"></p>
+    </section>
+    <div class="dots" id="pv-dots" role="img"></div>
+    <p class="notice" id="pv-flash" role="status" aria-live="polite"></p>
+    <div id="pv-view" style="display:flex; flex-direction:column; gap:16px;"></div>
+    <div class="row">
+      <button class="btn secondary slim" id="pv-restart" type="button">Restart preview</button>
+    </div>
+    <p class="notice bad" id="pv-problems" role="status"></p>
+  </section>
+
+  <!-- 5 GO LIVE -->
+  <section class="step hidden" data-step="5" data-label="Go live" style="display:flex; flex-direction:column; gap:16px;">
+    <section class="card">
+      <h2>Go live</h2>
+      <div id="summary" class="dim"></div>
+      <label class="field" for="b-email">Your email<span class="hint">We send your private host link here, plus an alert whenever a crew sends a photo, video or answer to judge.</span><input type="email" id="b-email" placeholder="you@gmail.com" autocomplete="email"></label>
+      <p class="notice bad" id="p-msg" role="status"></p>
+      <div class="btn-row">
+        <button class="btn" id="publish">Publish and go live</button>
+        <button class="btn secondary" id="save-draft">Save, but don't let crews join yet</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="done">
+      <h3>Your hunt is ready</h3>
+      <label class="field">Player link · put it on the start QR<code class="link" id="hunt-link"></code></label>
+      <div class="qrbox" id="hunt-qr"></div>
+      <label class="field">Your private host link · approvals, QR codes, reset<code class="link" id="host-link-code"></code></label>
+      <button class="btn secondary slim" id="copy-host" type="button" style="align-self:flex-start;">Copy host link</button>
+      <p class="small dim" id="host-note">Keep the host link private: anyone with it can run your hunt.</p>
+      <div class="btn-row">
+        <a class="btn alt" href="/host/#qr">Print all QR codes</a>
+        <a class="btn secondary" href="/host/">Open host dashboard</a>
+        <button class="btn secondary" id="new-hunt" type="button">Start another hunt</button>
+      </div>
+    </section>
+  </section>
+
+  <div class="row noprint" style="justify-content:space-between;">
+    <button class="btn secondary slim" id="prev" type="button">← Back</button>
+    <button class="btn slim" id="next" type="button">Next →</button>
+  </div>
+</main>
+
+<script src="/app/qrcode.js?v=1"></script>
+<script>
+(function () {
+  const $ = function (id) { return document.getElementById(id); };
+  const el = TH.el;
+  const DRAFT = 'th.build.draft', CONN = 'th.host';
+  const TYPES = [['qr', 'Find & scan a QR'], ['code', 'Answer a question / code'], ['photo', 'Send a photo'], ['video', 'Send a video']];
+  const ADJ = ['Midnight', 'Velvet', 'Feral', 'Electric', 'Haunted', 'Golden', 'Sneaky', 'Disco', 'Rogue', 'Lunar', 'Wild', 'Nettle', 'Sticky', 'Banana', 'Crimson', 'Lost'];
+  const NOUN = ['Crocodiles', 'Bananas', 'Owls', 'Pirates', 'Foxes', 'Comets', 'Bandits', 'Moths', 'Detectives', 'Magpies', 'Ravens', 'Goblins', 'Haze', 'Tapes', 'Pils', 'Riddlers'];
+  const STEPS = 6, PREVIEW = 4, LIVE = 5;
+
+  let d = Object.assign({ title: '', area: '', startsAt: '', notifyEmail: '', theme: 'bubblegum', teamMode: 'preset', maxTeams: 6, stops: [], teams: [], step: 0 }, TH.lsGet(DRAFT, {}));
+  let conn = TH.lsGet(CONN, null);
+
+  function save() { TH.lsSet(DRAFT, d); }
+  function uid() { return Math.random().toString(36).slice(2, 8).padEnd(6, '0'); }
+  function newStop() { return { id: uid(), name: '', type: 'qr', clue: '', task: '', answer: '', scanFirst: false }; }
+  if (!d.stops.length) { for (let i = 0; i < 4; i++) d.stops.push(newStop()); d.stops.push(Object.assign(newStop(), { type: 'photo', task: 'One selfie. Whole crew in it.\nThe clock stops when it lands.' })); }
+  if (!d.teams.length) for (let i = 0; i < 4; i++) d.teams.push({ name: '', members: '' });
+  TH.applyTheme(d.theme);
+
+  /* ---------- navigation ---------- */
+  function renderSteps() {
+    const nav = $('steps'); nav.innerHTML = '';
+    document.querySelectorAll('.step').forEach(function (s) {
+      const n = Number(s.dataset.step);
+      s.classList.toggle('hidden', n !== d.step);
+      nav.appendChild(el('button', { type: 'button', text: (n + 1) + ' ' + s.dataset.label, 'aria-current': n === d.step ? 'step' : false,
+        class: n < d.step ? 'done' : '', onclick: function () { go(n); } }));
+    });
+    $('prev').disabled = d.step === 0;
+    $('next').classList.toggle('hidden', d.step === STEPS - 1);
+    $('next').textContent = d.step === PREVIEW ? 'Looks good →' : 'Next →';
+    $('host-link').classList.toggle('hidden', !conn);
+    if (d.step === 1) renderStops();
+    if (d.step === 2) renderThemes();
+    if (d.step === 3) renderTeams();
+    if (d.step === PREVIEW) startPreview();
+    if (d.step === LIVE) renderLive();
+    window.scrollTo(0, 0);
+  }
+  function go(n) { d.step = Math.max(0, Math.min(STEPS - 1, n)); save(); renderSteps(); }
+  $('prev').addEventListener('click', function () { go(d.step - 1); });
+  $('next').addEventListener('click', function () { go(d.step + 1); });
+
+  /* ---------- basics ---------- */
+  function fillBasics() { $('b-title').value = d.title || ''; $('b-area').value = d.area || ''; $('b-when').value = d.startsAt || ''; $('b-email').value = d.notifyEmail || ''; }
+  fillBasics();
+  [['b-title', 'title'], ['b-area', 'area'], ['b-when', 'startsAt'], ['b-email', 'notifyEmail']].forEach(function (p) {
+    $(p[0]).addEventListener('input', function () { d[p[1]] = this.value; save(); });
+  });
+
+  /* ---------- stops ---------- */
+  document.querySelectorAll('#len-chips .chip').forEach(function (c) {
+    c.addEventListener('click', function () {
+      const n = Number(c.dataset.n);
+      while (d.stops.length < n) d.stops.splice(d.stops.length - 1, 0, newStop());
+      while (d.stops.length > n) d.stops.splice(d.stops.length - 2, 1);
+      save(); renderStops();
+    });
+  });
+  $('add-stop').addEventListener('click', function () { if (d.stops.length >= 10) return; d.stops.splice(d.stops.length - 1, 0, newStop()); save(); renderStops(); });
+
+  function renderStops() {
+    const n = d.stops.length;
+    document.querySelectorAll('#len-chips .chip').forEach(function (c) {
+      const v = Number(c.dataset.n);
+      c.setAttribute('aria-pressed', String((v === 5 && n <= 6) || (v === 8 && n >= 7 && n <= 8) || (v === 10 && n >= 9)));
+    });
+    $('add-stop').classList.toggle('hidden', n >= 10);
+    const box = $('stops'); box.innerHTML = '';
+    d.stops.forEach(function (s, i) {
+      const last = i === n - 1;
+      const card = el('section', { class: 'card stopcard' });
+      card.appendChild(el('div', { class: 'head' }, [
+        el('span', { class: 'num', text: last ? 'Stop ' + (i + 1) + ' · finish line' : 'Stop ' + (i + 1) }),
+        el('div', { class: 'row' }, [
+          i > 0 && !last ? el('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Move up', text: '↑', onclick: function () { move(i, -1); } }) : null,
+          i < n - 2 ? el('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Move down', text: '↓', onclick: function () { move(i, 1); } }) : null,
+          !last && n > 2 ? el('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Remove stop', text: '✕', onclick: function () { d.stops.splice(i, 1); save(); renderStops(); } }) : null
+        ])
+      ]));
+      card.appendChild(field('Place', 'input', s, 'name', { placeholder: last ? 'e.g. The Perseverance (where it ends)' : 'e.g. Plonk crazy golf', maxlength: '80' }, 'Only you see this.'));
+      const sel = el('select', { 'aria-label': 'Challenge' });
+      TYPES.forEach(function (t) { sel.appendChild(el('option', { value: t[0], text: t[1], selected: s.type === t[0] })); });
+      sel.addEventListener('change', function () {
+        s.type = sel.value;
+        if (last && s.type === 'photo' && !s.task) s.task = 'One selfie. Whole crew in it.\nThe clock stops when it lands.';
+        save(); renderStops();
+      });
+      card.appendChild(el('label', { class: 'field' }, ['How do crews prove they found it?', sel]));
+      card.appendChild(field('Clue', 'textarea', s, 'clue', { placeholder: 'Cryptic is good. Cruel is better.', maxlength: '2000' }, 'What crews read to find the place.'));
+      if (s.type !== 'qr') {
+        card.appendChild(field(s.type === 'code' ? 'Question' : 'Challenge', 'textarea', s, 'task',
+          { placeholder: s.type === 'code' ? 'e.g. What colour is the door?' : (s.type === 'video' ? 'e.g. Blow a bubble the size of your head. On camera.' : 'e.g. Recreate an album cover.'), maxlength: '1000', style: 'min-height:70px' }));
+        if (s.type === 'code') card.appendChild(field('Answer', 'input', s, 'answer', { placeholder: 'e.g. red | crimson   (blank = you judge it)', maxlength: '200' }, 'Separate accepted answers with |. Capitals and spaces are ignored.'));
+        const cb = el('input', { type: 'checkbox', checked: !!s.scanFirst });
+        cb.addEventListener('change', function () { s.scanFirst = cb.checked; save(); });
+        card.appendChild(el('label', { class: 'check' }, [cb, el('span', { text: 'Hide the challenge until they scan a QR at the spot (e.g. a card behind the bar).' })]));
+      }
+      if (last && s.type === 'qr') card.appendChild(el('p', { class: 'dim small', text: 'Tip: make the finish a crew selfie (Send a photo). The clock stops the moment it lands.' }));
+      box.appendChild(card);
+    });
+  }
+  function move(i, dir) { const j = i + dir; const t = d.stops[i]; d.stops[i] = d.stops[j]; d.stops[j] = t; save(); renderStops(); }
+  function field(label, tag, obj, key, attrs, hint) {
+    const input = el(tag, Object.assign({ type: tag === 'input' ? 'text' : false }, attrs || {}));
+    input.value = obj[key] || '';
+    input.addEventListener('input', function () { obj[key] = input.value; save(); });
+    return el('label', { class: 'field' }, [label, hint ? el('span', { class: 'hint', text: hint }) : null, input]);
+  }
+
+  /* ---------- themes ---------- */
+  function renderThemes() {
+    const box = $('themes'); box.innerHTML = '';
+    Object.keys(TH.THEMES).forEach(function (k) {
+      const t = TH.THEMES[k];
+      box.appendChild(el('button', { class: 'swatch', type: 'button', 'aria-pressed': String(d.theme === k), style: 'background:' + t.bg + ';color:' + t.text + ';border-color:' + t.line,
+        onclick: function () { d.theme = k; save(); TH.applyTheme(k); renderThemes(); } }, [
+        el('span', { style: 'font-family:' + t.display + ';font-size:22px;line-height:1;text-transform:' + t.upper, text: t.label }),
+        el('span', { style: 'font-size:13px;opacity:.85', text: t.blurb }),
+        el('span', { class: 'dots3' }, [el('span', { style: 'background:' + t.accent }), el('span', { style: 'background:' + t.accent2 }), el('span', { style: 'background:' + t.card + ';border:2px solid ' + t.line })])
+      ]));
+    });
+  }
+  $('surprise').addEventListener('click', function () {
+    const keys = Object.keys(TH.THEMES).filter(function (k) { return k !== d.theme; });
+    d.theme = keys[Math.floor(Math.random() * keys.length)]; save(); TH.applyTheme(d.theme); renderThemes();
+  });
+
+  /* ---------- crews ---------- */
+  function setMode(m) { d.teamMode = m; save(); renderTeams(); }
+  $('mode-preset').addEventListener('click', function () { setMode('preset'); });
+  $('mode-self').addEventListener('click', function () { setMode('self'); });
+  $('max-teams').addEventListener('input', function () { d.maxTeams = Number(this.value) || 6; save(); });
+  $('add-team').addEventListener('click', function () { if (d.teams.length < 30) { d.teams.push({ name: '', members: '' }); save(); renderTeams(); } });
+  $('gen-names').addEventListener('click', function () {
+    const used = {};
+    d.teams.forEach(function (t) {
+      let name; do { name = (ADJ[Math.floor(Math.random() * ADJ.length)] + ' ' + NOUN[Math.floor(Math.random() * NOUN.length)]).toUpperCase(); } while (used[name]);
+      used[name] = 1; t.name = name;
+    });
+    save(); renderTeams();
+  });
+  function renderTeams() {
+    $('mode-preset').setAttribute('aria-pressed', String(d.teamMode !== 'self'));
+    $('mode-self').setAttribute('aria-pressed', String(d.teamMode === 'self'));
+    $('preset-box').classList.toggle('hidden', d.teamMode === 'self');
+    $('self-box').classList.toggle('hidden', d.teamMode !== 'self');
+    $('max-teams').value = d.maxTeams || 6;
+    const box = $('teams'); box.innerHTML = '';
+    d.teams.forEach(function (t, i) {
+      box.appendChild(el('div', { class: 'sub-card' }, [
+        el('div', { class: 'spread' }, [el('strong', { text: 'Crew ' + (i + 1) }),
+          d.teams.length > 1 ? el('button', { class: 'iconbtn', type: 'button', 'aria-label': 'Remove crew', text: '✕', onclick: function () { d.teams.splice(i, 1); save(); renderTeams(); } }) : null]),
+        field('Crew name', 'input', t, 'name', { maxlength: '30', placeholder: 'e.g. INTO THE HAZE' }),
+        field('Players (optional)', 'input', t, 'members', { maxlength: '500', placeholder: 'Abbe (captain), Carlo, Cam…' })
+      ]));
+    });
+  }
+
+  /* ---------- routes (same rule as the hunt engine) ---------- */
+  function routeFor(teamIndex) {
+    const ids = d.stops.map(function (s, i) { return i; });
+    const fin = ids.pop();
+    const n = ids.length || 1, k = teamIndex % n;
+    let order = ids.slice(k).concat(ids.slice(0, k));
+    if (Math.floor(teamIndex / n) % 2 === 1) order = [order[0]].concat(order.slice(1).reverse());
+    return order.concat([fin]);
+  }
+  function crewNames() {
+    if (d.teamMode === 'self') return ['Crew 1', 'Crew 2', 'Crew 3'];
+    const names = d.teams.map(function (t) { return t.name.trim(); }).filter(String);
+    return names.length ? names : ['Crew 1'];
+  }
+
+  /* ---------- preview (runs entirely on this device) ---------- */
+  let pv = null;
+  function startPreview() {
+    const sel = $('pv-crew'); const keep = sel.value; sel.innerHTML = '';
+    crewNames().forEach(function (n, i) { sel.appendChild(el('option', { value: String(i), text: n, selected: String(i) === keep })); });
+    resetPreview();
+    const p = problems();
+    $('pv-problems').textContent = p.length ? 'Still to do: ' + p.join(' ') : '';
+  }
+  function resetPreview() {
+    const ci = Number($('pv-crew').value) || 0;
+    const route = routeFor(ci);
+    pv = { crew: ci, route: route, idx: 0, status: 'Hunting', note: '', finished: false, start: Date.now(), finishedAt: null };
+    $('pv-route').textContent = 'Route: ' + route.map(function (i) { return (d.stops[i].name || 'Stop ' + (i + 1)); }).join(' → ');
+    flash('');
+    renderPreview();
+  }
+  $('pv-crew').addEventListener('change', resetPreview);
+  $('pv-restart').addEventListener('click', resetPreview);
+  function flash(t, k) { $('pv-flash').textContent = t || ''; $('pv-flash').className = 'notice ' + (k || 'ok'); }
+  function advance() {
+    const stop = d.stops[pv.route[pv.idx]];
+    if (pv.idx === pv.route.length - 1) { pv.finished = true; pv.finishedAt = pv.finishedAt || Date.now(); flash('You made it.', 'ok'); }
+    else { pv.idx++; pv.status = 'Hunting'; flash('Cleared: ' + (stop.name || 'stop'), 'ok'); }
+    renderPreview();
+  }
+  function renderPreview() {
+    TH.renderDots($('pv-dots'), pv.idx, pv.route.length, pv.finished);
+    const v = $('pv-view'); v.innerHTML = '';
+    if (pv.finished) {
+      const pol = el('div', { class: 'polaroid reveal' }, [el('div', { class: 'photo', role: 'img', 'aria-label': 'Crew photo' }), el('div', { class: 'cap' }, [el('span', { text: crewNames()[pv.crew] }), el('span', { text: '🏁' })])]);
+      v.append(pol, el('div', { class: 'stats' }, [
+        el('div', { class: 'stat' }, [el('span', { class: 'label', text: 'Place' }), el('span', { class: 'big', text: '1st' })]),
+        el('div', { class: 'stat' }, [el('span', { class: 'label', text: 'Clock stopped' }), el('span', { class: 'time', text: TH.fmtClock(pv.finishedAt - pv.start) })])
+      ]), el('p', { class: 'notice ok', text: 'First crew home. Drinks are on the losers.' }));
+      return;
+    }
+    const s = d.stops[pv.route[pv.idx]];
+    const isFinal = pv.idx === pv.route.length - 1;
+    const card = el('section', { class: 'card reveal' });
+    v.appendChild(card);
+    card.appendChild(el('h2', { text: isFinal ? 'Last stop' : 'Your clue' }));
+    card.appendChild(el('p', { class: 'clue', text: s.clue || '(No clue written yet: add one in Stops.)' }));
+    const needsScan = s.type === 'qr' || (s.scanFirst && pv.status === 'Hunting');
+    if (needsScan) {
+      card.appendChild(el('p', { class: 'dim', style: 'font-weight:600;', text: 'Found it? Open your camera and scan the QR.' }));
+      card.appendChild(el('button', { class: 'btn alt', type: 'button', text: 'Pretend to scan the QR', onclick: function () {
+        if (s.type === 'qr') advance(); else { pv.status = 'Arrived'; flash('Found it. Your challenge is below.', 'ok'); renderPreview(); }
+      } }));
+      return;
+    }
+    if (s.task) { const t = el('div', { class: 'task' }); if (isFinal) t.appendChild(el('strong', { text: 'Final task' })); t.append(s.task); card.appendChild(t); }
+    if (pv.status === 'Pending') {
+      card.appendChild(el('div', { class: 'waiting' }, [el('span', { class: 'spinner' }), el('span', { text: 'Sent. Waiting for the judges.' })]));
+      card.appendChild(el('div', { class: 'sub-card' }, [el('strong', { text: 'You, as the judge:' }), el('div', { class: 'row' }, [
+        el('button', { class: 'btn slim', type: 'button', text: 'Approve', onclick: advance }),
+        el('button', { class: 'btn secondary slim', type: 'button', text: 'Reject', onclick: function () { pv.status = 'Rejected'; renderPreview(); } })
+      ])]));
+      return;
+    }
+    if (pv.status === 'Rejected') card.appendChild(el('p', { class: 'notice bad', text: 'Rejected. The judges want another go.' }));
+    if (s.type === 'code') {
+      const input = el('input', { type: 'text', placeholder: 'Your answer', 'aria-label': 'Your answer' });
+      const msg = el('p', { class: 'notice', role: 'status' });
+      const form = el('form', { class: 'btn-row' }, [input, el('button', { class: 'btn', type: 'submit', text: 'Submit answer' }), msg]);
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const val = input.value.trim(); if (!val) return;
+        if (!s.answer) { pv.status = 'Pending'; renderPreview(); return; }
+        const sq = function (x) { return String(x).toLowerCase().replace(/[^a-z0-9]/g, ''); };
+        if (s.answer.split('|').some(function (a) { return sq(a) && sq(a) === sq(val); })) { flash('Correct.', 'ok'); advance(); }
+        else { msg.className = 'notice bad'; msg.textContent = 'Not quite. Try again.'; }
+      });
+      card.appendChild(form);
+    } else {
+      card.appendChild(el('button', { class: 'btn', type: 'button', text: s.type === 'video' ? 'Record video' : (isFinal ? 'Take crew selfie' : 'Take photo'),
+        onclick: function () { if (isFinal && !pv.finishedAt) pv.finishedAt = Date.now(); pv.status = 'Pending'; flash(isFinal ? 'Clock stopped. The judges are checking.' : 'Sent. Waiting for the judges.', 'ok'); renderPreview(); } }));
+      card.appendChild(el('p', { class: 'dim small', text: 'In the preview this pretends to upload. On the night it opens the camera.' }));
+    }
+  }
+
+  /* ---------- go live ---------- */
+  function minutes(n) { return n <= 6 ? '45–60 minutes' : n <= 8 ? '1.5–2 hours' : '2.5–3 hours'; }
+  function problems() {
+    const p = [];
+    if (!d.title.trim()) p.push('Name the hunt (Basics).');
+    d.stops.forEach(function (s, i) {
+      if (!s.name.trim()) p.push('Stop ' + (i + 1) + ' needs a place.');
+      if (!s.clue.trim()) p.push('Stop ' + (i + 1) + ' needs a clue.');
+      if (s.type !== 'qr' && !s.task.trim()) p.push('Stop ' + (i + 1) + ' needs a ' + (s.type === 'code' ? 'question' : 'challenge') + '.');
+    });
+    if (d.teamMode !== 'self' && !d.teams.some(function (t) { return t.name.trim(); })) p.push('Add at least one crew.');
+    return p;
+  }
+  function renderLive() {
+    const qr = d.stops.filter(function (s) { return s.type === 'qr' || s.scanFirst; }).length;
+    const crews = d.teamMode === 'self' ? 'crews name themselves (up to ' + (d.maxTeams || 6) + ')' : crewNames().length + ' crews';
+    $('summary').innerHTML = '';
+    $('summary').append(el('p', { text: (d.title || 'Untitled hunt') + ' · ' + d.stops.length + ' stops · about ' + minutes(d.stops.length) + ' · ' + TH.THEMES[d.theme].label + ' · ' + crews + ' · ' + (qr + 1) + ' QR codes to print.' }));
+    const p = problems();
+    $('p-msg').className = 'notice bad';
+    $('p-msg').textContent = p.length ? 'Before you publish: ' + p.join(' ') : '';
+    $('publish').disabled = $('save-draft').disabled = p.length > 0;
+    $('publish').textContent = conn ? 'Publish changes' : 'Publish and go live';
+    if (conn) showDone();
+  }
+
+  function showDone() {
+    const link = TH.playUrl(conn);
+    $('hunt-link').textContent = link;
+    $('hunt-qr').innerHTML = TH.qrSvg(link, 5);
+    const hl = TH.ref(conn).kind === 'cloud' ? TH.hostLink(conn, conn.key) : '';
+    $('host-link-code').textContent = hl || '(managed in your own Google account)';
+    $('copy-host').classList.toggle('hidden', !hl);
+    $('host-note').textContent = (d.notifyEmail && conn.emailEnabled) ? 'We emailed this to ' + d.notifyEmail + '. Keep it private: anyone with it can run your hunt.'
+      : 'Copy this somewhere safe. Without an email on file, it only lives on this device. Anyone with it can run your hunt.';
+    $('done').classList.remove('hidden');
+  }
+
+  async function publish(live) {
+    const msg = $('p-msg');
+    msg.className = 'notice'; msg.textContent = 'Publishing…';
+    $('publish').disabled = $('save-draft').disabled = true;
+    try {
+      if (!conn) {
+        const c = await TH.post({ kind: 'cloud', id: '' }, 'create_hunt', {});
+        conn = { kind: 'cloud', id: c.hunt, key: c.key };
+        TH.lsSet(CONN, conn);
+      }
+      const payload = Object.assign({}, d, { live: live, teams: d.teams.filter(function (t) { return t.name.trim(); }) });
+      delete payload.step;
+      let g;
+      try { g = await TH.post(conn, 'admin_save', { key: conn.key, payload: JSON.stringify(payload) }); }
+      catch (e) {
+        if (!/already playing/.test(e.message) || !confirm(e.message + '\n\nSave anyway and restart every crew? Their progress will be wiped.')) throw e;
+        await TH.post(conn, 'admin_reset', { key: conn.key });
+        g = await TH.post(conn, 'admin_save', { key: conn.key, payload: JSON.stringify(payload), force: '1' });
+      }
+      d.stops = g.stops.map(function (s) { return { id: s.id, name: s.name, type: s.type, clue: s.clue, task: s.task, answer: s.answer, scanFirst: !!s.scanFirst }; });
+      save();
+      conn.emailEnabled = !!g.emailEnabled; TH.lsSet(CONN, conn);
+      msg.className = 'notice ok'; msg.textContent = live ? 'Live. Crews can join now.' : 'Saved. Publish when you are ready.';
+      $('publish').textContent = 'Publish changes';
+      $('host-link').classList.remove('hidden');
+      showDone();
+      $('done').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) { msg.className = 'notice bad'; msg.textContent = e.message; }
+    $('publish').disabled = $('save-draft').disabled = false;
+  }
+  $('publish').addEventListener('click', function () { publish(true); });
+  $('save-draft').addEventListener('click', function () { publish(false); });
+  $('copy-host').addEventListener('click', function () {
+    const t = $('host-link-code').textContent, btn = this;
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy host link'; }, 1500); })
+      .catch(function () { prompt('Copy your host link:', t); });
+  });
+  $('new-hunt').addEventListener('click', function () {
+    if (!confirm('Start a new hunt? This one stays live; open it again any time with its host link.')) return;
+    TH.lsDel(DRAFT); TH.lsDel(CONN); location.reload();
+  });
+
+
+  renderSteps();
+})();
+</script>
+</body>
+</html>

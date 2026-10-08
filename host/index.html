@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFC9DF">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bagel+Fat+One&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Lilita+One&family=Space+Grotesk:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="/app/app.css?v=1">
+<script src="/app/config.js?v=1"></script>
+<script src="/app/th.js?v=1"></script>
+<title>Host dashboard · Treasure Hunt World</title>
+</head>
+<body>
+<main class="wrap wide">
+  <div class="topbar noprint">
+    <a class="brand" href="/">treasurehunt.world</a>
+    <a class="pill" href="/build/">Builder</a>
+  </div>
+  <h1 class="noprint" id="h-title">Host dashboard</h1>
+
+  <section class="card hidden" id="login">
+    <h2>Open your hunt</h2>
+    <p class="dim">Open the private host link you got when you published (it's in your email too), or paste it here.</p>
+    <label class="field" for="l-link">Host link<input type="url" id="l-link" placeholder="https://treasurehunt.world/host/#h=…" autocomplete="off"></label>
+    <button class="btn" id="l-go">Open</button>
+    <details>
+      <summary class="small">Hunt in your own Google account?</summary>
+      <div style="display:flex; flex-direction:column; gap:10px; padding-bottom:12px;">
+        <label class="field" for="l-url">Web app URL<input type="url" id="l-url" placeholder="https://script.google.com/macros/s/…/exec"></label>
+        <label class="field" for="l-key">Admin key<input type="password" id="l-key"></label>
+        <button class="btn secondary" id="l-go-gas" type="button">Connect</button>
+      </div>
+    </details>
+    <p class="notice bad" id="l-msg" role="status"></p>
+  </section>
+
+  <div id="dash" class="hidden" style="display:flex; flex-direction:column; gap:16px;">
+    <div class="chips noprint" role="tablist">
+      <button class="chip" type="button" data-tab="approvals" aria-pressed="true">Approvals <span id="pending-count"></span></button>
+      <button class="chip" type="button" data-tab="crews" aria-pressed="false">Crews</button>
+      <button class="chip" type="button" data-tab="qr" aria-pressed="false">Print QRs</button>
+      <button class="chip" type="button" data-tab="settings" aria-pressed="false">Links &amp; reset</button>
+    </div>
+
+    <section id="t-approvals" class="tab" style="display:flex; flex-direction:column; gap:12px;">
+      <p class="dim small">Checks for new submissions every 10 seconds. Approving unlocks the crew's next clue straight away.</p>
+      <div id="queue" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px;"></div>
+      <h3 class="hidden" id="done-h">Decided</h3>
+      <div id="decided" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:10px;"></div>
+    </section>
+
+    <section id="t-crews" class="tab hidden" style="display:flex; flex-direction:column; gap:12px;">
+      <section class="card"><span class="mono small dim">HUNT CLOCK</span><span class="clock" id="clock">0:00:00</span></section>
+      <ol class="board" id="board"></ol>
+    </section>
+
+    <section id="t-qr" class="tab hidden" style="display:flex; flex-direction:column; gap:12px;">
+      <div class="row noprint"><button class="btn slim" id="print" type="button">Print this page</button><span class="dim small">Print at 100% on plain paper. Scan each one before hiding it.</span></div>
+      <h2 id="qr-title"></h2>
+      <div class="qrsheet" id="qrsheet"></div>
+    </section>
+
+    <section id="t-settings" class="tab hidden" style="display:flex; flex-direction:column; gap:12px;">
+      <section class="card">
+        <h3>Links</h3>
+        <label class="field">Hunt link (start QR)<code class="link" id="s-play"></code></label>
+        <label class="field">Leaderboard (for a screen at the pub)<code class="link" id="s-board"></code></label>
+        <label class="field">Gallery<code class="link" id="s-gallery"></code></label>
+        <label class="field hidden" id="s-host-wrap">Your private host link (open it on any device to manage the hunt)<code class="link" id="s-host"></code></label>
+      </section>
+      <section class="card">
+        <h3>Reset</h3>
+        <p class="dim">Puts every crew back at the start and clears approvals. Uploaded files stay in your Drive. Do this after rehearsing.</p>
+        <button class="btn secondary" id="reset" type="button">Reset all progress</button>
+        <p class="notice" id="s-msg" role="status"></p>
+      </section>
+      <button class="btn secondary slim" id="logout" type="button" style="align-self:flex-start;">Disconnect this device</button>
+    </section>
+    <p class="notice bad" id="err" role="alert"></p>
+  </div>
+</main>
+
+<script src="/app/qrcode.js?v=1"></script>
+<script>
+(function () {
+  const $ = function (id) { return document.getElementById(id); };
+  const el = TH.el;
+  let conn = TH.lsGet('th.host', null), timer = null, cfg = null;
+  // Private host link: /host/#h=<hunt>.<key>
+  (function () {
+    const m = location.hash.match(/h=([a-z0-9]{6,12})\.([A-Za-z0-9]{12,64})/);
+    if (m) { conn = { kind: 'cloud', id: m[1], key: m[2] }; TH.lsSet('th.host', conn); history.replaceState(null, '', location.pathname + '#approvals'); }
+  })();
+  let tab = (location.hash || '#approvals').slice(1);
+
+  function start() {
+    if (!conn) { $('login').classList.remove('hidden'); $('dash').classList.add('hidden'); return; }
+    $('login').classList.add('hidden'); $('dash').classList.remove('hidden');
+    TH.post(conn.id, 'admin_get', { key: conn.key }).then(function (g) {
+      cfg = g; TH.applyTheme(g.theme); $('h-title').textContent = g.title || 'Host dashboard';
+      const play = TH.playUrl(conn);
+      $('s-play').textContent = play; $('s-board').textContent = play + '#board'; $('s-gallery').textContent = play + '#gallery';
+      if (conn.kind === 'cloud') { $('s-host').textContent = TH.hostLink(conn, conn.key); $('s-host-wrap').classList.remove('hidden'); }
+      if (tab === 'qr') renderQr();
+    }).catch(function (e) { $('err').textContent = e.message; if (/admin key|host link/i.test(e.message)) { TH.lsDel('th.host'); conn = null; start(); } });
+    showTab(['approvals', 'crews', 'qr', 'settings'].indexOf(tab) !== -1 ? tab : 'approvals');
+  }
+  async function tryConn(c) {
+    try { await TH.post(c, 'admin_ping', { key: c.key }); conn = c; TH.lsSet('th.host', conn); start(); }
+    catch (e) { $('l-msg').textContent = e.message; }
+  }
+  $('l-go').addEventListener('click', function () {
+    const m = $('l-link').value.match(/h=([a-z0-9]{6,12})\.([A-Za-z0-9]{12,64})/);
+    if (!m) { $('l-msg').textContent = 'That doesn\'t look like a host link. It contains #h= followed by a code.'; return; }
+    tryConn({ kind: 'cloud', id: m[1], key: m[2] });
+  });
+  $('l-go-gas').addEventListener('click', function () {
+    const id = TH.idFromUrl($('l-url').value), key = $('l-key').value.trim();
+    if (!id || !key) { $('l-msg').textContent = 'Paste both the URL (ending /exec) and the key.'; return; }
+    tryConn({ kind: 'gas', id: id, key: key });
+  });
+
+  function showTab(t) {
+    tab = t; history.replaceState(null, '', '#' + t);
+    document.querySelectorAll('[data-tab]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.tab === t)); });
+    document.querySelectorAll('.tab').forEach(function (s) { s.classList.toggle('hidden', s.id !== 't-' + t); });
+    clearTimeout(timer);
+    if (t === 'approvals') loadQueue();
+    if (t === 'crews') loadBoard();
+    if (t === 'qr') renderQr();
+  }
+  document.querySelectorAll('[data-tab]').forEach(function (b) { b.addEventListener('click', function () { showTab(b.dataset.tab); }); });
+
+  /* ---------- approvals ---------- */
+  async function loadQueue() {
+    try {
+      const d = await TH.post(conn.id, 'admin_pending', { key: conn.key });
+      $('err').textContent = '';
+      const pending = d.items.filter(function (i) { return i.status === 'Pending'; });
+      $('pending-count').textContent = pending.length ? '(' + pending.length + ')' : '';
+      document.title = (pending.length ? '(' + pending.length + ') ' : '') + 'Host dashboard';
+      const q = $('queue'); q.innerHTML = '';
+      if (!pending.length) q.appendChild(el('p', { class: 'dim', text: 'Nothing waiting. Enjoy it while it lasts.' }));
+      pending.forEach(function (i) { q.appendChild(item(i, true)); });
+      const done = d.items.filter(function (i) { return i.status !== 'Pending'; }).slice(0, 24);
+      $('done-h').classList.toggle('hidden', !done.length);
+      const dd = $('decided'); dd.innerHTML = '';
+      done.forEach(function (i) { dd.appendChild(item(i, false)); });
+    } catch (e) { $('err').textContent = e.message; }
+    clearTimeout(timer);
+    if (tab === 'approvals') timer = setTimeout(loadQueue, 10000);
+  }
+  function item(i, live) {
+    const card = el('div', { class: 'sub-card' });
+    card.appendChild(el('div', { class: 'spread' }, [el('strong', { text: i.team }), el('span', { class: 'badge ' + i.status, text: i.status })]));
+    card.appendChild(el('span', { class: 'dim small', text: 'Stop ' + i.stopNo + ' · ' + i.stop + ' · ' + i.kind + (i.time ? ' · ' + new Date(i.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '') }));
+    if (i.kind === 'text') card.appendChild(el('p', { class: 'clue', style: 'font-size:18px;', text: '“' + i.text + '”' }));
+    else if (i.kind === 'video' && live && conn.kind === 'cloud') card.appendChild(el('video', { src: i.url, controls: true, playsinline: true, preload: 'metadata', style: 'width:100%;max-height:340px;border-radius:10px;background:#000' }));
+    else if (i.kind === 'video') card.appendChild(el('a', { class: 'btn alt slim', href: i.url, target: '_blank', rel: 'noopener', text: '▶ Play video' }));
+    else if (live) { const img = el('img', { src: i.thumb, alt: 'Submission from ' + i.team, loading: 'lazy' }); card.appendChild(el('a', { href: i.url, target: '_blank', rel: 'noopener' }, [img])); }
+    if (i.note) card.appendChild(el('span', { class: 'small', text: 'Note: ' + i.note }));
+    if (!live) return card;
+    const note = el('input', { type: 'text', placeholder: 'Note to crew if rejecting (optional)', maxlength: '300' });
+    const ok = el('button', { class: 'btn slim', type: 'button', text: 'Approve' });
+    const no = el('button', { class: 'btn secondary slim', type: 'button', text: 'Reject' });
+    async function decide(status) {
+      ok.disabled = no.disabled = true;
+      try { await TH.post(conn.id, 'admin_decide', { key: conn.key, row: i.row, status: status, note: note.value, fileId: i.fileId }); loadQueue(); }
+      catch (e) { $('err').textContent = e.message; ok.disabled = no.disabled = false; }
+    }
+    ok.addEventListener('click', function () { decide('Approved'); });
+    no.addEventListener('click', function () { decide('Rejected'); });
+    card.append(note, el('div', { class: 'row' }, [ok, no]));
+    return card;
+  }
+
+  /* ---------- crews ---------- */
+  async function loadBoard() {
+    try {
+      const d = await TH.get(conn.id, 'leaderboard');
+      TH.runClock($('clock'), d.huntStart, d.serverNow);
+      const b = $('board'); b.innerHTML = '';
+      d.teams.forEach(function (r) {
+        const pct = r.total ? Math.round(100 * r.cleared / r.total) : 0;
+        b.appendChild(el('li', { class: 'lb' }, [el('span', { class: 'rank', text: String(r.rank) }),
+          el('div', {}, [el('div', { class: 'name', text: r.team }), el('div', { class: 'sub', text: r.status + ' · ' + r.cleared + '/' + r.total }), el('div', { class: 'bar' }, [el('span', { style: 'width:' + pct + '%' })])]),
+          el('span', { class: 'right', text: r.finishedAt ? TH.fmtClock(r.elapsedMs) : '' })]));
+      });
+    } catch (e) { $('err').textContent = e.message; }
+    clearTimeout(timer);
+    if (tab === 'crews') timer = setTimeout(loadBoard, 15000);
+  }
+
+  /* ---------- QR sheet ---------- */
+  function renderQr() {
+    if (!cfg) return;
+    $('qr-title').textContent = cfg.title + ' · QR codes';
+    const sheet = $('qrsheet'); sheet.innerHTML = '';
+    function card(title, note, url) {
+      const c = el('div', { class: 'qrcard' }); c.innerHTML = TH.qrSvg(url, 5);
+      c.append(el('strong', { text: title }), el('span', { text: note }));
+      sheet.appendChild(c);
+    }
+    card('START', 'Where crews meet. Opens the join page.', TH.playUrl(conn));
+    cfg.stops.forEach(function (s, i) {
+      if (s.type === 'qr' || s.scanFirst) card(s.name, 'Stop ' + (i + 1) + (s.type === 'qr' ? ' · scanning clears it' : ' · unlocks the challenge'), TH.playUrl(conn, s.token));
+    });
+  }
+  $('print').addEventListener('click', function () { window.print(); });
+
+  /* ---------- settings ---------- */
+  $('reset').addEventListener('click', async function () {
+    if (!confirm('Reset every crew to the start? Approvals and the log are cleared.')) return;
+    try { await TH.post(conn.id, 'admin_reset', { key: conn.key }); $('s-msg').className = 'notice ok'; $('s-msg').textContent = 'Reset. Ready for the real thing.'; }
+    catch (e) { $('s-msg').className = 'notice bad'; $('s-msg').textContent = e.message; }
+  });
+  $('logout').addEventListener('click', function () { TH.lsDel('th.host'); conn = null; start(); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && conn) showTab(tab); });
+
+  start();
+})();
+</script>
+</body>
+</html>
