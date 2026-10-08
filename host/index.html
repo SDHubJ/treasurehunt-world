@@ -8,9 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bagel+Fat+One&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Lilita+One&family=Space+Grotesk:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="/app/app.css?v=1">
-<script src="/app/config.js?v=1"></script>
-<script src="/app/th.js?v=1"></script>
+<link rel="stylesheet" href="/app/app.css?v=2">
+<script src="/app/config.js?v=2"></script>
+<script src="/app/th.js?v=2"></script>
+
 <title>Host dashboard · Treasure Hunt World</title>
 </head>
 <body>
@@ -38,6 +39,11 @@
   </section>
 
   <div id="dash" class="hidden" style="display:flex; flex-direction:column; gap:16px;">
+    <section class="card hidden noprint" id="test-banner" style="border-color:var(--accent);">
+      <strong>Test mode</strong>
+      <p class="small" style="margin:0;" id="test-text">Only 2 crews can play and 20 uploads are allowed. Walk the route, then reset and unlock before the night.</p>
+      <button class="btn slim" id="unlock" type="button" style="align-self:flex-start;">Unlock for £25</button>
+    </section>
     <div class="chips noprint" role="tablist">
       <button class="chip" type="button" data-tab="approvals" aria-pressed="true">Approvals <span id="pending-count"></span></button>
       <button class="chip" type="button" data-tab="crews" aria-pressed="false">Crews</button>
@@ -71,9 +77,15 @@
         <label class="field">Gallery<code class="link" id="s-gallery"></code></label>
         <label class="field hidden" id="s-host-wrap">Your private host link (open it on any device to manage the hunt)<code class="link" id="s-host"></code></label>
       </section>
+      <section class="card" id="keep-card">
+        <h3>Keep the photos</h3>
+        <p class="dim" id="keep-text">Photos and videos are deleted 90 days after the last upload. Download them all before then.</p>
+        <button class="btn secondary" id="download" type="button" style="align-self:flex-start;">Download all photos &amp; videos</button>
+        <p class="notice" id="dl-msg" role="status"></p>
+      </section>
       <section class="card">
         <h3>Reset</h3>
-        <p class="dim">Puts every crew back at the start and clears approvals. Uploaded files stay in your Drive. Do this after rehearsing.</p>
+        <p class="dim">Puts every crew back at the start, clears approvals and deletes every photo and video uploaded so far. Do this after rehearsing.</p>
         <button class="btn secondary" id="reset" type="button">Reset all progress</button>
         <p class="notice" id="s-msg" role="status"></p>
       </section>
@@ -105,6 +117,7 @@
       $('s-play').textContent = play; $('s-board').textContent = play + '#board'; $('s-gallery').textContent = play + '#gallery';
       if (conn.kind === 'cloud') { $('s-host').textContent = TH.hostLink(conn, conn.key); $('s-host-wrap').classList.remove('hidden'); }
       if (tab === 'qr') renderQr();
+      renderAccount(g);
     }).catch(function (e) { $('err').textContent = e.message; if (/admin key|host link/i.test(e.message)) { TH.lsDel('th.host'); conn = null; start(); } });
     showTab(['approvals', 'crews', 'qr', 'settings'].indexOf(tab) !== -1 ? tab : 'approvals');
   }
@@ -211,10 +224,70 @@
   }
   $('print').addEventListener('click', function () { window.print(); });
 
+  /* ---------- payment + storage ---------- */
+  const CFG = window.TH_CONFIG || {};
+  function renderAccount(g) {
+    const cloud = conn.kind === 'cloud';
+    const test = cloud && g.paymentRequired && !g.paid;
+    $('test-banner').classList.toggle('hidden', !test);
+    if (test) {
+      $('unlock').textContent = 'Unlock for ' + (CFG.PRICE || '£25');
+      $('test-text').textContent = g.status === 'live'
+        ? 'Only ' + g.limits.testCrews + ' crews can play and ' + g.limits.testUploads + ' uploads are allowed (' + g.usage.uploads + ' used). Walk the route, then reset and unlock before the night.'
+        : 'This hunt is a draft. Go live from the builder to test it with ' + g.limits.testCrews + ' crews, then unlock it before the night.';
+    }
+    $('keep-card').classList.toggle('hidden', !cloud);
+    if (cloud && g.usage) {
+      $('keep-text').textContent = g.usage.mediaPurged ? 'Photos and videos from this hunt were deleted ' + g.limits.retentionDays + ' days after the last upload.'
+        : 'Photos and videos are deleted ' + g.limits.retentionDays + ' days after the last upload. Download them all before then. ' + g.usage.uploads + ' uploads, ' + (g.usage.bytes / 1048576).toFixed(0) + ' MB.';
+      $('download').classList.toggle('hidden', !!g.usage.mediaPurged);
+    }
+  }
+  $('unlock').addEventListener('click', function () {
+    const u = TH.payUrl(conn, cfg && cfg.notifyEmail);
+    if (!u) return;
+    TH.lsSet('th.build.paying', conn.id);
+    location.href = u;
+  });
+  function loadScript(src) {
+    return new Promise(function (ok, no) { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = function () { no(new Error('Could not load the zip tool. Check your connection.')); }; document.head.appendChild(s); });
+  }
+  $('download').addEventListener('click', async function () {
+    const btn = this, msg = $('dl-msg');
+    btn.disabled = true; msg.className = 'notice';
+    try {
+      const g = await TH.get(conn.id, 'gallery');
+      if (!g.items.length) throw new Error('No photos or videos yet.');
+      if (!window.fflate) await loadScript('/app/fflate.js');
+      const parts = [];
+      const zip = new fflate.Zip(function (err, chunk) { if (err) throw err; parts.push(chunk); });
+      const used = {};
+      for (let i = 0; i < g.items.length; i++) {
+        const it = g.items[i];
+        msg.textContent = 'Downloading ' + (i + 1) + ' of ' + g.items.length + '…';
+        const res = await fetch(it.url);
+        if (!res.ok) continue;
+        const buf = new Uint8Array(await res.arrayBuffer());
+        const ext = (it.url.match(/\.([a-z0-9]{2,5})$/) || [, 'bin'])[1];
+        let name = (it.team + ' - ' + it.label).replace(/[\\/:*?"<>|]/g, '_');
+        used[name] = (used[name] || 0) + 1;
+        if (used[name] > 1) name += ' (' + used[name] + ')';
+        const f = new fflate.ZipPassThrough(name + '.' + ext);
+        zip.add(f); f.push(buf, true);
+      }
+      zip.end();
+      const blob = new Blob(parts, { type: 'application/zip' });
+      const a = el('a', { href: URL.createObjectURL(blob), download: (cfg.title || 'treasure-hunt').replace(/[^a-z0-9]+/gi, '-') + '-gallery.zip' });
+      document.body.appendChild(a); a.click(); a.remove();
+      msg.className = 'notice ok'; msg.textContent = 'Saved ' + g.items.length + ' files.';
+    } catch (e) { msg.className = 'notice bad'; msg.textContent = e.message; }
+    btn.disabled = false;
+  });
+
   /* ---------- settings ---------- */
   $('reset').addEventListener('click', async function () {
-    if (!confirm('Reset every crew to the start? Approvals and the log are cleared.')) return;
-    try { await TH.post(conn.id, 'admin_reset', { key: conn.key }); $('s-msg').className = 'notice ok'; $('s-msg').textContent = 'Reset. Ready for the real thing.'; }
+    if (!confirm('Reset every crew to the start? Approvals are cleared and every uploaded photo and video is deleted.')) return;
+    try { await TH.post(conn.id, 'admin_reset', { key: conn.key }); $('s-msg').className = 'notice ok'; $('s-msg').textContent = 'Reset. Ready for the real thing.'; start(); }
     catch (e) { $('s-msg').className = 'notice bad'; $('s-msg').textContent = e.message; }
   });
   $('logout').addEventListener('click', function () { TH.lsDel('th.host'); conn = null; start(); });
